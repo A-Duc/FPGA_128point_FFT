@@ -1,4 +1,4 @@
-module R2(
+module add_sub_cmplx(
     input  signed [15:0] iA_R,  // Real part
     input  signed [15:0] iA_I,  // Imaginary part
     
