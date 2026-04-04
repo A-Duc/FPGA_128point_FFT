@@ -13,10 +13,10 @@ module cmplx_add_sub#(
     output signed [BIT_WIDTH:0] oDif_R,
     output signed [BIT_WIDTH:0] oDif_I
 );
-    assign oSum_R = iA_R + iB_R;
-    assign oSum_I = iA_I + iB_I;
-    
-    assign oDif_R = iA_R - iB_R;
-    assign oDif_I = iA_I - iB_I;
+    assign oSum_R = {iA_R[BIT_WIDTH-1], iA_R} + {iB_R[BIT_WIDTH-1], iB_R};
+    assign oSum_I = {iA_I[BIT_WIDTH-1], iA_I} + {iB_I[BIT_WIDTH-1], iB_I};
+
+    assign oDif_R = {iA_R[BIT_WIDTH-1], iA_R} - {iB_R[BIT_WIDTH-1], iB_R};
+    assign oDif_I = {iA_I[BIT_WIDTH-1], iA_I} - {iB_I[BIT_WIDTH-1], iB_I};
 
 endmodule
