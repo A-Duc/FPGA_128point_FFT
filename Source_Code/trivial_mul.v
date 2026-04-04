@@ -1,11 +1,13 @@
-module trivial_mul(
+module trivial_mul#(
+    parameter BIT_WIDTH = 16
+)(
     input         [1:0]  mode,
 
-    input  signed [15:0] iData_R,  
-    input  signed [15:0] iData_I,  
+    input  signed [BIT_WIDTH - 1:0] iData_R,  
+    input  signed [BIT_WIDTH - 1:0] iData_I,  
 
-    output reg signed [15:0] oData_R,
-    output reg signed [15:0] oData_I
+    output reg signed [BIT_WIDTH - 1:0] oData_R,
+    output reg signed [BIT_WIDTH - 1:0] oData_I
 );
     always @(*) begin
         case (mode)
