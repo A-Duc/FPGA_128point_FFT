@@ -21,7 +21,7 @@ module delay_line_vector #(
         end else begin : gen_delay_n
             always @(posedge clk or posedge reset) begin
                 if (reset) begin
-                    shift_reg <= 0;
+                    shift_reg <= {(BIT_WIDTH * DELAY_DEPTH){1'b0}};
                 end else begin
                     shift_reg <= {shift_reg[(BIT_WIDTH * (DELAY_DEPTH - 1)) - 1 : 0], iData};
                 end

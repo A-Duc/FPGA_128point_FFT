@@ -9,12 +9,17 @@ module trivial_mul#(
     output reg signed [BIT_WIDTH - 1:0] oData_R,
     output reg signed [BIT_WIDTH - 1:0] oData_I
 );
+    localparam MUL_POS1 = 2'b00;
+    localparam MUL_NEG1 = 2'b01;
+    localparam MUL_POSJ = 2'b10;
+    localparam MUL_NEGJ = 2'b11;
+    
     always @(*) begin
         case (mode)
-            2'b00: begin oData_I =  iData_I; oData_R =  iData_R; end
-            2'b01: begin oData_I = -iData_I; oData_R = -iData_R; end
-            2'b10: begin oData_I =  iData_R; oData_R = -iData_I; end
-            2'b11: begin oData_I = -iData_R; oData_R =  iData_I; end
+            MUL_POS1: begin oData_I =  iData_I; oData_R =  iData_R; end
+            MUL_NEG1: begin oData_I = -iData_I; oData_R = -iData_R; end
+            MUL_POSJ: begin oData_I =  iData_R; oData_R = -iData_I; end
+            MUL_NEGJ: begin oData_I = -iData_R; oData_R =  iData_I; end
             default: begin oData_I = iData_I; oData_R = iData_R; end
         endcase
     end
