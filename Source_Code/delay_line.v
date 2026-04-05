@@ -3,7 +3,7 @@ module delay_line_vector #(
     parameter DELAY_DEPTH = 1
 )(  
     input  wire                   clk,
-    input  wire                   reset,
+    input  wire                   reset_n,
     input  wire [BIT_WIDTH - 1:0] iData,
     output wire [BIT_WIDTH - 1:0] oData
 );
@@ -11,16 +11,16 @@ module delay_line_vector #(
 
     generate
         if (DELAY_DEPTH == 1) begin : gen_delay_1
-            always @(posedge clk or posedge reset) begin
-                if (reset) begin
+            always @(posedge clk or negedge reset_n) begin
+                if (~reset_n) begin
                     shift_reg <= 0;
                 end else begin
                     shift_reg <= iData;
                 end
             end
         end else begin : gen_delay_n
-            always @(posedge clk or posedge reset) begin
-                if (reset) begin
+            always @(posedge clk or negedge reset_n) begin
+                if (~reset_n) begin
                     shift_reg <= {(BIT_WIDTH * DELAY_DEPTH){1'b0}};
                 end else begin
                     shift_reg <= {shift_reg[(BIT_WIDTH * (DELAY_DEPTH - 1)) - 1 : 0], iData};
