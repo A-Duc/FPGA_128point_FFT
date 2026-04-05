@@ -2,7 +2,7 @@ module fft_plain_stage #(
     parameter BIT_WIDTH = 16
 )(
     input  wire       clk,
-    input  wire       reset_n,
+    input  wire       reset,
     input  wire [4:0] idata_slot,
 
     input  wire signed [BIT_WIDTH-1:0] in_re [0:3],
@@ -46,8 +46,8 @@ module fft_plain_stage #(
         .oDif_I(lower_dif_im_w)
     );
 
-    always @(posedge clk or negedge reset_n) begin
-        if (~reset_n) begin
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
             odata_slot <= 5'b0;
 
             out_re[0] <= {(BIT_WIDTH + 1){1'b0}};
