@@ -7,14 +7,10 @@ module cordic1_stage2(
     output reg  [15:0] y_out
 );
 
-    // Khai báo đầy đủ 90-bit tín hiệu điều khiển từ ROM
     reg [1:0]  quad;
     reg [23:0] sigma;
-    reg [31:0] kinv_pos;
-    reg [31:0] kinv_neg;
+    reg [27:0] scale_cmds;
 
-    // Bảng ROM tĩnh cho Path 1 (p = 1)
-    // Verilog ROM Table for Stage 2 - Path 1 (p=1)
 always @(*) begin
     case (n3)
             5'd00: {quad, sigma, scale_cmds} = {2'd0, 24'h000000, 28'h000005E}; // Angle: 0.0000 rad
@@ -55,10 +51,7 @@ end
 
 
 
-    // =========================================================
-    // TODO: Instantiate khối xử lý logic CORDIC vật lý ở đây.
-    // Đưa x_in, y_in cùng với {quad, sigma, kinv_pos, kinv_neg} 
-    // vào datapath để nó tính ra x_out, y_out.
-    // =========================================================
+
+
 
 endmodule
