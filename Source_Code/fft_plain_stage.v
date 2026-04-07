@@ -1,87 +1,87 @@
 module fft_plain_stage #(
     parameter BIT_WIDTH = 16
 )(
-    input  wire       clk,
-    input  wire       reset,
-    input  wire [4:0] idata_slot,
+    input  wire       Clk,
+    input  wire       Reset,
+    input  wire [4:0] iData_slot,
 
-    input  wire signed [BIT_WIDTH-1:0] in0_re,
-    input  wire signed [BIT_WIDTH-1:0] in0_im,
-    input  wire signed [BIT_WIDTH-1:0] in1_re,
-    input  wire signed [BIT_WIDTH-1:0] in1_im,
-    input  wire signed [BIT_WIDTH-1:0] in2_re,
-    input  wire signed [BIT_WIDTH-1:0] in2_im,
-    input  wire signed [BIT_WIDTH-1:0] in3_re,
-    input  wire signed [BIT_WIDTH-1:0] in3_im,
+    input  wire signed [BIT_WIDTH-1:0] iData0_r,
+    input  wire signed [BIT_WIDTH-1:0] iData0_i,
+    input  wire signed [BIT_WIDTH-1:0] iData1_r,
+    input  wire signed [BIT_WIDTH-1:0] iData1_i,
+    input  wire signed [BIT_WIDTH-1:0] iData2_r,
+    input  wire signed [BIT_WIDTH-1:0] iData2_i,
+    input  wire signed [BIT_WIDTH-1:0] iData3_r,
+    input  wire signed [BIT_WIDTH-1:0] iData3_i,
 
-    output reg  [4:0] odata_slot,
+    output reg  [4:0] oData_slot,
 
-    output reg  signed [BIT_WIDTH:0] out0_re,
-    output reg  signed [BIT_WIDTH:0] out0_im,
-    output reg  signed [BIT_WIDTH:0] out1_re,
-    output reg  signed [BIT_WIDTH:0] out1_im,
-    output reg  signed [BIT_WIDTH:0] out2_re,
-    output reg  signed [BIT_WIDTH:0] out2_im,
-    output reg  signed [BIT_WIDTH:0] out3_re,
-    output reg  signed [BIT_WIDTH:0] out3_im
+    output reg  signed [BIT_WIDTH:0] oData0_r,
+    output reg  signed [BIT_WIDTH:0] oData0_i,
+    output reg  signed [BIT_WIDTH:0] oData1_r,
+    output reg  signed [BIT_WIDTH:0] oData1_i,
+    output reg  signed [BIT_WIDTH:0] oData2_r,
+    output reg  signed [BIT_WIDTH:0] oData2_i,
+    output reg  signed [BIT_WIDTH:0] oData3_r,
+    output reg  signed [BIT_WIDTH:0] oData3_i
 );
 
-    wire signed [BIT_WIDTH:0] upper_sum_re_w;
-    wire signed [BIT_WIDTH:0] upper_sum_im_w;
-    wire signed [BIT_WIDTH:0] upper_dif_re_w;
-    wire signed [BIT_WIDTH:0] upper_dif_im_w;
+    wire signed [BIT_WIDTH:0] upper_sum_r_w;
+    wire signed [BIT_WIDTH:0] upper_sum_i_w;
+    wire signed [BIT_WIDTH:0] upper_dif_r_w;
+    wire signed [BIT_WIDTH:0] upper_dif_i_w;
 
-    wire signed [BIT_WIDTH:0] lower_sum_re_w;
-    wire signed [BIT_WIDTH:0] lower_sum_im_w;
-    wire signed [BIT_WIDTH:0] lower_dif_re_w;
-    wire signed [BIT_WIDTH:0] lower_dif_im_w;
+    wire signed [BIT_WIDTH:0] lower_sum_r_w;
+    wire signed [BIT_WIDTH:0] lower_sum_i_w;
+    wire signed [BIT_WIDTH:0] lower_dif_r_w;
+    wire signed [BIT_WIDTH:0] lower_dif_i_w;
 
     cmplx_add_sub upper_butterfly(
-        .iA_R(in0_re),
-        .iA_I(in0_im),
-        .iB_R(in1_re),
-        .iB_I(in1_im),
-        .oSum_R(upper_sum_re_w),
-        .oSum_I(upper_sum_im_w),
-        .oDif_R(upper_dif_re_w),
-        .oDif_I(upper_dif_im_w)
+        .iA_r(iData0_r),
+        .iA_i(iData0_i),
+        .iB_r(iData1_r),
+        .iB_i(iData1_i),
+        .oSum_r(upper_sum_r_w),
+        .oSum_i(upper_sum_i_w),
+        .oDif_r(upper_dif_r_w),
+        .oDif_i(upper_dif_i_w)
     );
 
     cmplx_add_sub lower_butterfly(
-        .iA_R(in2_re),
-        .iA_I(in2_im),
-        .iB_R(in3_re),
-        .iB_I(in3_im),
-        .oSum_R(lower_sum_re_w),
-        .oSum_I(lower_sum_im_w),
-        .oDif_R(lower_dif_re_w),
-        .oDif_I(lower_dif_im_w)
+        .iA_r(iData2_r),
+        .iA_i(iData2_i),
+        .iB_r(iData3_r),
+        .iB_i(iData3_i),
+        .oSum_r(lower_sum_r_w),
+        .oSum_i(lower_sum_i_w),
+        .oDif_r(lower_dif_r_w),
+        .oDif_i(lower_dif_i_w)
     );
 
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            odata_slot <= 5'b0;
+    always @(posedge Clk or posedge Reset) begin
+        if (Reset) begin
+            oData_slot <= 5'b0;
 
-            out0_re <= {(BIT_WIDTH + 1){1'b0}};
-            out0_im <= {(BIT_WIDTH + 1){1'b0}};
-            out1_re <= {(BIT_WIDTH + 1){1'b0}};
-            out1_im <= {(BIT_WIDTH + 1){1'b0}};
-            out2_re <= {(BIT_WIDTH + 1){1'b0}};
-            out2_im <= {(BIT_WIDTH + 1){1'b0}};
-            out3_re <= {(BIT_WIDTH + 1){1'b0}};
-            out3_im <= {(BIT_WIDTH + 1){1'b0}};
+            oData0_r <= {(BIT_WIDTH + 1){1'b0}};
+            oData0_i <= {(BIT_WIDTH + 1){1'b0}};
+            oData1_r <= {(BIT_WIDTH + 1){1'b0}};
+            oData1_i <= {(BIT_WIDTH + 1){1'b0}};
+            oData2_r <= {(BIT_WIDTH + 1){1'b0}};
+            oData2_i <= {(BIT_WIDTH + 1){1'b0}};
+            oData3_r <= {(BIT_WIDTH + 1){1'b0}};
+            oData3_i <= {(BIT_WIDTH + 1){1'b0}};
         end else begin
-            odata_slot <= idata_slot;
+            oData_slot <= iData_slot;
 
-            out0_re <= upper_sum_re_w;
-            out0_im <= upper_sum_im_w;
-            out1_re <= upper_dif_re_w;
-            out1_im <= upper_dif_im_w;
+            oData0_r <= upper_sum_r_w;
+            oData0_i <= upper_sum_i_w;
+            oData1_r <= upper_dif_r_w;
+            oData1_i <= upper_dif_i_w;
 
-            out2_re <= lower_sum_re_w;
-            out2_im <= lower_sum_im_w;
-            out3_re <= lower_dif_re_w;
-            out3_im <= lower_dif_im_w;
+            oData2_r <= lower_sum_r_w;
+            oData2_i <= lower_sum_i_w;
+            oData3_r <= lower_dif_r_w;
+            oData3_i <= lower_dif_i_w;
         end
     end
 endmodule

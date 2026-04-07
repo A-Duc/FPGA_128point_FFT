@@ -1,22 +1,22 @@
 module cmplx_add_sub#(
     parameter BIT_WIDTH = 16
 )(
-    input  signed [BIT_WIDTH - 1:0] iA_R,  // Real part
-    input  signed [BIT_WIDTH - 1:0] iA_I,  // Imaginary part
+    input  signed [BIT_WIDTH-1:0] iA_r,  // Real part
+    input  signed [BIT_WIDTH-1:0] iA_i,  // Imaginary part
     
-    input  signed [BIT_WIDTH - 1:0] iB_R,  
-    input  signed [BIT_WIDTH - 1:0] iB_I,  
+    input  signed [BIT_WIDTH-1:0] iB_r,  
+    input  signed [BIT_WIDTH-1:0] iB_i,  
 
-    output signed [BIT_WIDTH:0] oSum_R,
-    output signed [BIT_WIDTH:0] oSum_I,
+    output signed [BIT_WIDTH:0] oSum_r,
+    output signed [BIT_WIDTH:0] oSum_i,
     
-    output signed [BIT_WIDTH:0] oDif_R,
-    output signed [BIT_WIDTH:0] oDif_I
+    output signed [BIT_WIDTH:0] oDif_r,
+    output signed [BIT_WIDTH:0] oDif_i
 );
-    assign oSum_R = {iA_R[BIT_WIDTH-1], iA_R} + {iB_R[BIT_WIDTH-1], iB_R};
-    assign oSum_I = {iA_I[BIT_WIDTH-1], iA_I} + {iB_I[BIT_WIDTH-1], iB_I};
+    assign oSum_r = {iA_r[BIT_WIDTH-1], iA_r} + {iB_r[BIT_WIDTH-1], iB_r};
+    assign oSum_i = {iA_i[BIT_WIDTH-1], iA_i} + {iB_i[BIT_WIDTH-1], iB_i};
 
-    assign oDif_R = {iA_R[BIT_WIDTH-1], iA_R} - {iB_R[BIT_WIDTH-1], iB_R};
-    assign oDif_I = {iA_I[BIT_WIDTH-1], iA_I} - {iB_I[BIT_WIDTH-1], iB_I};
+    assign oDif_r = {iA_r[BIT_WIDTH-1], iA_r} - {iB_r[BIT_WIDTH-1], iB_r};
+    assign oDif_i = {iA_i[BIT_WIDTH-1], iA_i} - {iB_i[BIT_WIDTH-1], iB_i};
 
 endmodule
