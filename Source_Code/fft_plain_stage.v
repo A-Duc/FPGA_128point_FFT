@@ -3,6 +3,7 @@ module fft_plain_stage #(
 )(
     input  wire       Clk,
     input  wire       Reset,
+    input  wire       iData_valid,
     input  wire [4:0] iData_slot,
 
     input  wire signed [BIT_WIDTH-1:0] iData0_r,
@@ -15,6 +16,7 @@ module fft_plain_stage #(
     input  wire signed [BIT_WIDTH-1:0] iData3_i,
 
     output reg  [4:0] oData_slot,
+    output reg        oData_valid,
 
     output reg  signed [BIT_WIDTH:0] oData0_r,
     output reg  signed [BIT_WIDTH:0] oData0_i,
@@ -60,6 +62,7 @@ module fft_plain_stage #(
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
+            oData_valid <= 1'b0;
             oData_slot <= 5'b0;
 
             oData0_r <= {(BIT_WIDTH + 1){1'b0}};
@@ -71,6 +74,7 @@ module fft_plain_stage #(
             oData3_r <= {(BIT_WIDTH + 1){1'b0}};
             oData3_i <= {(BIT_WIDTH + 1){1'b0}};
         end else begin
+            oData_valid <= iData_valid;
             oData_slot <= iData_slot;
 
             oData0_r <= upper_sum_r_w;
