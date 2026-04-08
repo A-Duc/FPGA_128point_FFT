@@ -26,13 +26,18 @@ struct ScaleTerm {
 // Các hàm tính toán CORDIC
 // ----------------------------------------------------------------
 static int reduce_quadrant(double theta, double& alpha) {
+    // 1. Đưa theta về khoảng [0, 2*PI)
     theta = fmod(theta, 2.0 * PI);
     if (theta < 0.0) theta += 2.0 * PI;
-    int k = static_cast<int>(floor(theta * (2.0 / PI)));
-    if (k < 0) k = 0; if (k > 3) k = 3;
+
+    // 2. Dịch trục đi PI/4 để gán góc vào trục tọa độ gần nhất (0, PI/2, PI, 3PI/2)
+    double shifted_theta = theta + (PI / 4.0);
+    int k = static_cast<int>(floor(shifted_theta / (PI / 2.0)));
+    k = k % 4; // Đảm bảo k luôn thuộc {0, 1, 2, 3}
+
+    // 3. Tính góc dư alpha (lúc này alpha sẽ luôn nằm an toàn trong khoảng [-PI/4, PI/4])
     alpha = theta - k * (PI / 2.0);
-    if (alpha < 0.0)      alpha = 0.0;
-    if (alpha > PI / 2.0) alpha = PI / 2.0;
+
     return k;
 }
 

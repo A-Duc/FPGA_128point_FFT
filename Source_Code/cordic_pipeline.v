@@ -4,16 +4,15 @@ module cordic_pipeline (
     input  wire clk,
     input  wire signed [15:0] x_in,
     input  wire signed [15:0] y_in,
-    input  wire [53:0] iData,  // {quad[1:0], sigma[23:0], scale_cmds[27:0]}
+    input  wire [1:0]  quad,
+    input wire [23:0] sigma,
+    input wire [27:0] scale_cmds,
     output reg  [15:0] x_out,
     output reg  [15:0] y_out
 );
 
     localparam W = 16;
 
-    wire [1:0]  quad       = iData[53:52];
-    wire [23:0] sigma      = iData[51:28];
-    wire [27:0] scale_cmds = iData[27:0];
 
     reg signed [W-1:0] x0, y0;
     always @(*) begin
@@ -82,16 +81,16 @@ module cordic_pipeline (
     wire signed [W+32:0] pair_y01 = term_y0_r + term_y1_r;
     wire signed [W+32:0] pair_y23 = term_y2_r + term_y3_r;
 
-    reg signed [W+32:0] pair_x01_r, pair_x23_r, pair_y01_r, pair_y23_r;
+    reg signed [W+32:0] pair_x01_reg, pair_x23_reg, pair_y01_reg, pair_y23_reg;
     always @(posedge clk) begin
-        pair_x01_r <= pair_x01;
-        pair_x23_r <= pair_x23;
-        pair_y01_r <= pair_y01;
-        pair_y23_r <= pair_y23;
+        pair_x01_reg <= pair_x01;
+        pair_x23_reg <= pair_x23;
+        pair_y01_reg <= pair_y01;
+        pair_y23_reg <= pair_y23;
     end
 
-    wire signed [W+33:0] full_x = pair_x01_r + pair_x23_r;
-    wire signed [W+33:0] full_y = pair_y01_r + pair_y23_r;
+    wire signed [W+33:0] full_x = pair_x01_reg + pair_x23_reg;
+    wire signed [W+33:0] full_y = pair_y01_reg + pair_y23_reg;
 
     always @(posedge clk) begin
         x_out <= full_x[45:30];
