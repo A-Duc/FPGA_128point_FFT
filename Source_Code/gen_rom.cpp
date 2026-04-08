@@ -108,13 +108,13 @@ static uint32_t pack_sigma(const vector<int>& sigma) {
 // ----------------------------------------------------------------
 int main() {
     // In phần đầu Case
-    cout << "// Verilog ROM Table for Stage 2 - Path 1 (p=1)\n";
+    cout << "// Verilog ROM Table for Stage 2 - Path 3 (p=3)\n";
     cout << "always @(*) begin\n";
     cout << "    case (n3)\n";
 
     for (int n3 = 0; n3 < 32; ++n3) {
-        // Tính toán cho p = 1
-        int p = 1; 
+        // Tính toán cho p = 2
+        int p = 3; 
         double theta = static_cast<double>(p * n3) * PI / 64.0;
         
         double alpha;
