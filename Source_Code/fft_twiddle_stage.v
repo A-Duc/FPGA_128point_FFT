@@ -1,6 +1,7 @@
-module fft_plain_stage #(
-    parameter BIT_WIDTH  = 16,
-    parameter SLOT_WIDTH = 5
+module fft_twiddle_stage#(
+    parameter BIT_WIDTH   = 16,
+    parameter DELAY_DEPTH = 9,
+    parameter SLOT_WIDTH  = 5
 )(
     input  wire Clk,
     input  wire Reset,
@@ -17,6 +18,10 @@ module fft_plain_stage #(
     input  wire signed [BIT_WIDTH-1:0] iData3_r,
     input  wire signed [BIT_WIDTH-1:0] iData3_i,
 
+    input  wire [53:0] iRom_data_path0,
+    input  wire [53:0] iRom_data_path1,
+    input  wire [53:0] iRom_data_path2,
+
     output reg                   oData_valid,
     output reg  [SLOT_WIDTH-1:0] oData_slot,
 
@@ -29,6 +34,22 @@ module fft_plain_stage #(
     output reg signed [BIT_WIDTH-1:0] oData3_r,
     output reg signed [BIT_WIDTH-1:0] oData3_i
 );
+
+    wire [1:0]  path0_quad;
+    wire [23:0] path0_sigma;
+    wire [27:0] path0_scale_cmds;
+
+    wire [1:0]  path1_quad;
+    wire [23:0] path1_sigma;
+    wire [27:0] path1_scale_cmds;
+
+    wire [1:0]  path2_quad;
+    wire [23:0] path2_sigma;
+    wire [27:0] path2_scale_cmds;
+
+    assign {path0_quad, path0_sigma, path0_scale_cmds} = iRom_data_path0;
+    assign {path1_quad, path1_sigma, path1_scale_cmds} = iRom_data_path1;
+    assign {path2_quad, path2_sigma, path2_scale_cmds} = iRom_data_path2;
 
     wire signed [BIT_WIDTH-1:0] upper_sum_r_w;
     wire signed [BIT_WIDTH-1:0] upper_sum_i_w;
@@ -66,34 +87,16 @@ module fft_plain_stage #(
         .oDif_i(lower_dif_i_w)
     );
 
-    always @(posedge Clk or posedge Reset) begin
-        if (Reset) begin
-            oData_valid <= 1'b0;
-            oData_slot  <= {SLOT_WIDTH{1'b0}};
-
-            oData0_r <= {BIT_WIDTH{1'b0}};
-            oData0_i <= {BIT_WIDTH{1'b0}};
-            oData1_r <= {BIT_WIDTH{1'b0}};
-            oData1_i <= {BIT_WIDTH{1'b0}};
-            oData2_r <= {BIT_WIDTH{1'b0}};
-            oData2_i <= {BIT_WIDTH{1'b0}};
-            oData3_r <= {BIT_WIDTH{1'b0}};
-            oData3_i <= {BIT_WIDTH{1'b0}};
-        end
-        else begin
-            oData_valid <= iData_valid;
-            oData_slot  <= iData_slot;
-
-            oData0_r <= upper_sum_r_w;
-            oData0_i <= upper_sum_i_w;
-            oData1_r <= upper_dif_r_w;
-            oData1_i <= upper_dif_i_w;
-
-            oData2_r <= lower_sum_r_w;
-            oData2_i <= lower_sum_i_w;
-            oData3_r <= lower_dif_r_w;
-            oData3_i <= lower_dif_i_w;
-        end
-    end
+    delay_line #(
+        .BIT_WIDTH(BIT_WIDTH),
+        .DELAY_DEPTH(DELAY_DEPTH)
+    ) delay_path0 (
+        .Clk    (Clk),
+        .Reset  (Reset),
+        .iData_r(upper_sum_r_w),
+        .iData_i(upper_sum_i_w),
+        .oData_r(oData0_r),
+        .oData_i(oData0_i)
+    );
 
 endmodule

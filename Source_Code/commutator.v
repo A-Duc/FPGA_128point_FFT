@@ -29,7 +29,6 @@ module commutator #(
     output wire signed [BIT_WIDTH-1:0] oData3_i
 );
 
-
     wire signed [BIT_WIDTH-1:0] in_delay_path0_r;
     wire signed [BIT_WIDTH-1:0] in_delay_path0_i;
 
@@ -42,10 +41,9 @@ module commutator #(
     wire signed [BIT_WIDTH-1:0] out_delay_path3_r;
     wire signed [BIT_WIDTH-1:0] out_delay_path3_i;
 
-
     delay_line #(
-        .DELAY_DEPTH(DELAY_DEPTH),
-        .BIT_WIDTH(BIT_WIDTH)
+        .BIT_WIDTH(BIT_WIDTH),
+        .DELAY_DEPTH(DELAY_DEPTH)
     ) delay_path0 (
         .Clk    (Clk),
         .Reset  (Reset),
@@ -56,8 +54,8 @@ module commutator #(
     );
 
     delay_line #(
-        .DELAY_DEPTH(DELAY_DEPTH),
-        .BIT_WIDTH(BIT_WIDTH)
+        .BIT_WIDTH(BIT_WIDTH),
+        .DELAY_DEPTH(DELAY_DEPTH)
     ) delay_path2a (
         .Clk    (Clk),
         .Reset  (Reset),
@@ -68,8 +66,8 @@ module commutator #(
     );
 
     delay_line #(
-        .DELAY_DEPTH(DELAY_DEPTH),
-        .BIT_WIDTH(BIT_WIDTH)
+        .BIT_WIDTH(BIT_WIDTH),
+        .DELAY_DEPTH(DELAY_DEPTH)
     ) delay_path2b (
         .Clk    (Clk),
         .Reset  (Reset),
@@ -80,8 +78,8 @@ module commutator #(
     );
 
     delay_line #(
-        .DELAY_DEPTH(DELAY_DEPTH),
-        .BIT_WIDTH(BIT_WIDTH)
+        .BIT_WIDTH(BIT_WIDTH),
+        .DELAY_DEPTH(DELAY_DEPTH)
     ) delay_path3 (
         .Clk    (Clk),
         .Reset  (Reset),
@@ -91,20 +89,17 @@ module commutator #(
         .oData_i(out_delay_path3_i)
     );
 
-
-    assign {in_delay_path0_r, in_delay_path0_i} =
-           (upper_mux0_sel) ? {out_delay_path2a_r, out_delay_path2a_i}
-                            : {iData0_r,          iData0_i};
-
-    assign {oData1_r, oData1_i} =
-           (upper_mux1_sel) ? {iData0_r,          iData0_i}
-                            : {out_delay_path2a_r, out_delay_path2a_i};
-
-
-
     assign {in_delay_path2b_r, in_delay_path2b_i} =
            (lower_mux0_sel) ? {out_delay_path3_r, out_delay_path3_i}
                             : {iData1_r,          iData1_i};
+
+    assign {in_delay_path0_r, in_delay_path0_i} =
+           (upper_mux0_sel) ? {out_delay_path2a_r, out_delay_path2a_i}
+                            : {iData0_r,           iData0_i};
+
+    assign {oData1_r, oData1_i} =
+           (upper_mux1_sel) ? {iData0_r,           iData0_i}
+                            : {out_delay_path2a_r, out_delay_path2a_i};
 
     assign {oData3_r, oData3_i} =
            (lower_mux1_sel) ? {out_delay_path3_r, out_delay_path3_i}
