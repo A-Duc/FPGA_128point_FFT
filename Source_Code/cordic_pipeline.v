@@ -74,8 +74,8 @@ module cordic_pipeline (
     reg signed [W-1:0] x4_reg, y4_reg, x5_reg, y5_reg, x6_reg, y6_reg;
 
     cordic_stage #(.Width(W), .SHIFT(0)) st0 (x0, y0, sigma_stage0[23:20], x1_comb, y1_comb);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x1_reg <= 16'sb0; y1_reg <= 16'sb0;
         end else begin
             x1_reg <= x1_comb; y1_reg <= y1_comb;
@@ -83,8 +83,8 @@ module cordic_pipeline (
     end
 
     cordic_stage #(.Width(W), .SHIFT(3)) st1 (x1_reg, y1_reg, sigma_stage1[19:16], x2_comb, y2_comb);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x2_reg <= 16'sb0; y2_reg <= 16'sb0;
         end else begin
             x2_reg <= x2_comb; y2_reg <= y2_comb;
@@ -92,8 +92,8 @@ module cordic_pipeline (
     end
 
     cordic_stage #(.Width(W), .SHIFT(6)) st2 (x2_reg, y2_reg, sigma_stage2[15:12], x3_comb, y3_comb);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x3_reg <= 16'sb0; y3_reg <= 16'sb0;
         end else begin
             x3_reg <= x3_comb; y3_reg <= y3_comb;
@@ -101,8 +101,8 @@ module cordic_pipeline (
     end
 
     cordic_stage #(.Width(W), .SHIFT(9)) st3 (x3_reg, y3_reg, sigma_stage3[11:8], x4_comb, y4_comb);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x4_reg <= 16'sb0; y4_reg <= 16'sb0;
         end else begin
             x4_reg <= x4_comb; y4_reg <= y4_comb;
@@ -110,8 +110,8 @@ module cordic_pipeline (
     end
 
     cordic_stage #(.Width(W), .SHIFT(12)) st4 (x4_reg, y4_reg, sigma_stage4[7:4], x5_comb, y5_comb);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x5_reg <= 16'sb0; y5_reg <= 16'sb0;
         end else begin
             x5_reg <= x5_comb; y5_reg <= y5_comb;
@@ -119,8 +119,8 @@ module cordic_pipeline (
     end
 
     cordic_stage #(.Width(W), .SHIFT(15)) st5 (x5_reg, y5_reg, sigma_stage5[3:0], x6_comb, y6_comb);
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x6_reg <= 16'sb0; y6_reg <= 16'sb0;
         end else begin
             x6_reg <= x6_comb; y6_reg <= y6_comb;
@@ -145,8 +145,8 @@ module cordic_pipeline (
     reg signed [W+31:0] term_x0_r, term_x1_r, term_x2_r, term_x3_r;
     reg signed [W+31:0] term_y0_r, term_y1_r, term_y2_r, term_y3_r;
 
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             term_x0_r <= 0; term_x1_r <= 0; term_x2_r <= 0; term_x3_r <= 0;
             term_y0_r <= 0; term_y1_r <= 0; term_y2_r <= 0; term_y3_r <= 0;
         end else begin
@@ -168,8 +168,8 @@ module cordic_pipeline (
 
     reg signed [W+32:0] pair_x01_reg, pair_x23_reg, pair_y01_reg, pair_y23_reg;
 
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             pair_x01_reg <= 0; pair_x23_reg <= 0;
             pair_y01_reg <= 0; pair_y23_reg <= 0;
         end else begin
@@ -183,8 +183,8 @@ module cordic_pipeline (
     wire signed [W+33:0] full_x = pair_x01_reg + pair_x23_reg;
     wire signed [W+33:0] full_y = pair_y01_reg + pair_y23_reg;
 
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
             x_out <= 16'sb0;
             y_out <= 16'sb0;
         end else begin
