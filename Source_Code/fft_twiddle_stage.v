@@ -18,9 +18,9 @@ module fft_twiddle_stage#(
     input  wire signed [BIT_WIDTH-1:0] iData3_r,
     input  wire signed [BIT_WIDTH-1:0] iData3_i,
 
-    input  wire [53:0] iRom_data_path0,
     input  wire [53:0] iRom_data_path1,
     input  wire [53:0] iRom_data_path2,
+    input  wire [53:0] iRom_data_path3,
 
     output reg                   oData_valid,
     output reg  [SLOT_WIDTH-1:0] oData_slot,
@@ -35,10 +35,6 @@ module fft_twiddle_stage#(
     output reg signed [BIT_WIDTH-1:0] oData3_i
 );
 
-    wire [1:0]  path0_quad;
-    wire [23:0] path0_sigma;
-    wire [27:0] path0_scale_cmds;
-
     wire [1:0]  path1_quad;
     wire [23:0] path1_sigma;
     wire [27:0] path1_scale_cmds;
@@ -47,9 +43,13 @@ module fft_twiddle_stage#(
     wire [23:0] path2_sigma;
     wire [27:0] path2_scale_cmds;
 
-    assign {path0_quad, path0_sigma, path0_scale_cmds} = iRom_data_path0;
+    wire [1:0]  path3_quad;
+    wire [23:0] path3_sigma;
+    wire [27:0] path3_scale_cmds;
+
     assign {path1_quad, path1_sigma, path1_scale_cmds} = iRom_data_path1;
     assign {path2_quad, path2_sigma, path2_scale_cmds} = iRom_data_path2;
+    assign {path3_quad, path3_sigma, path3_scale_cmds} = iRom_data_path3;
 
     wire signed [BIT_WIDTH-1:0] upper_sum_r_w;
     wire signed [BIT_WIDTH-1:0] upper_sum_i_w;
