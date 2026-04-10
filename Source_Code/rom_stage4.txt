@@ -1,0 +1,48 @@
+// Verilog ROM Table for Stage 4 - Path = 1, p=2
+always @(*) begin
+    case (n3)
+        3'd0: {quad, sigma, scale_cmds} = {2'd0, 24'h000000, 28'h000005E}; // Angle: 0.0000 rad
+        3'd1: {quad, sigma, scale_cmds} = {2'd0, 24'h032130, 28'hA5D7D5E}; // Angle: 0.3927 rad
+        3'd2: {quad, sigma, scale_cmds} = {2'd1, 24'hF00000, 28'hB1EBE5E}; // Angle: 0.7854 rad
+        3'd3: {quad, sigma, scale_cmds} = {2'd1, 24'h0DEFD0, 28'hA5D7D5E}; // Angle: 1.1781 rad
+        3'd4: {quad, sigma, scale_cmds} = {2'd1, 24'h000000, 28'h000005E}; // Angle: 1.5708 rad
+        3'd5: {quad, sigma, scale_cmds} = {2'd1, 24'h032130, 28'hA5D7D5E}; // Angle: 1.9635 rad
+        3'd6: {quad, sigma, scale_cmds} = {2'd2, 24'hF00000, 28'hB1EBE5E}; // Angle: 2.3562 rad
+        3'd7: {quad, sigma, scale_cmds} = {2'd2, 24'h0DEFD0, 28'hA5D7D5E}; // Angle: 2.7489 rad
+        default: {quad, sigma, scale_cmds} = 54'h0;
+    endcase
+end
+
+--------------------------------------------------
+// Verilog ROM Table for Stage 4 - Path =2, p=1
+always @(*) begin
+    case (n3)
+        3'd0: {quad, sigma, scale_cmds} = {2'd0, 24'h000000, 28'h000005E}; // Angle: 0.0000 rad
+        3'd1: {quad, sigma, scale_cmds} = {2'd0, 24'h02DF1D, 28'hE34FCDE}; // Angle: 0.1963 rad
+        3'd2: {quad, sigma, scale_cmds} = {2'd0, 24'h032130, 28'hA5D7D5E}; // Angle: 0.3927 rad
+        3'd3: {quad, sigma, scale_cmds} = {2'd0, 24'h1E31F3, 28'hEBEBE5E}; // Angle: 0.5890 rad
+        3'd4: {quad, sigma, scale_cmds} = {2'd1, 24'hF00000, 28'hB1EBE5E}; // Angle: 0.7854 rad
+        3'd5: {quad, sigma, scale_cmds} = {2'd1, 24'hF2DF1D, 28'hEBEBE5E}; // Angle: 0.9817 rad
+        3'd6: {quad, sigma, scale_cmds} = {2'd1, 24'h0DEFD0, 28'hA5D7D5E}; // Angle: 1.1781 rad
+        3'd7: {quad, sigma, scale_cmds} = {2'd1, 24'h0E31F3, 28'hE34FCDE}; // Angle: 1.3744 rad
+        default: {quad, sigma, scale_cmds} = 54'h0;
+    endcase
+end
+
+--------------------------------------------------
+// Verilog ROM Table for Stage 4 - Path = 3, p=3
+always @(*) begin
+    case (n3)
+        3'd0: {quad, sigma, scale_cmds} = {2'd0, 24'h000000, 28'h000005E}; // Angle: 0.0000 rad
+        3'd1: {quad, sigma, scale_cmds} = {2'd0, 24'h1E31F3, 28'hEBEBE5E}; // Angle: 0.5890 rad
+        3'd2: {quad, sigma, scale_cmds} = {2'd1, 24'h0DEFD0, 28'hA5D7D5E}; // Angle: 1.1781 rad
+        3'd3: {quad, sigma, scale_cmds} = {2'd1, 24'h02DF1D, 28'hE34FCDE}; // Angle: 1.7671 rad
+        3'd4: {quad, sigma, scale_cmds} = {2'd2, 24'hF00000, 28'hB1EBE5E}; // Angle: 2.3562 rad
+        3'd5: {quad, sigma, scale_cmds} = {2'd2, 24'h0E31F3, 28'hE34FCDE}; // Angle: 2.9452 rad
+        3'd6: {quad, sigma, scale_cmds} = {2'd2, 24'h032130, 28'hA5D7D5E}; // Angle: 3.5343 rad
+        3'd7: {quad, sigma, scale_cmds} = {2'd3, 24'hF2DF1D, 28'hEBEBE5E}; // Angle: 4.1233 rad
+        default: {quad, sigma, scale_cmds} = 54'h0;
+    endcase
+end
+
+//theo thứ tự path 1,2,3
