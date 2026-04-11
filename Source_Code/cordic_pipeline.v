@@ -11,6 +11,7 @@ module cordic_pipeline (
     output reg [15:0] y_out
 );
     localparam W = 16;
+
     reg signed [W-1:0] x0, y0;
 
     always @(*) begin
@@ -23,34 +24,20 @@ module cordic_pipeline (
         endcase
     end
 
+    // Pipeline control signals
     wire [23:0] sigma_stage0 = sigma;
-    reg [23:0] sigma_stage1;
-    reg [23:0] sigma_stage2;
-    reg [23:0] sigma_stage3;
-    reg [23:0] sigma_stage4;
-    reg [23:0] sigma_stage5;
+    reg [23:0] sigma_stage1, sigma_stage2, sigma_stage3, sigma_stage4, sigma_stage5;
 
-    reg [27:0] scale_cmds_d1;
-    reg [27:0] scale_cmds_d2;
-    reg [27:0] scale_cmds_d3;
-    reg [27:0] scale_cmds_d4;
-    reg [27:0] scale_cmds_d5;
-    reg [27:0] scale_cmds_d6;
+    reg [27:0] scale_cmds_d1, scale_cmds_d2, scale_cmds_d3;
+    reg [27:0] scale_cmds_d4, scale_cmds_d5, scale_cmds_d6;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            sigma_stage1 <= 24'b0;
-            sigma_stage2 <= 24'b0;
-            sigma_stage3 <= 24'b0;
-            sigma_stage4 <= 24'b0;
-            sigma_stage5 <= 24'b0;
+            sigma_stage1 <= 0; sigma_stage2 <= 0; sigma_stage3 <= 0;
+            sigma_stage4 <= 0; sigma_stage5 <= 0;
 
-            scale_cmds_d1 <= 28'b0;
-            scale_cmds_d2 <= 28'b0;
-            scale_cmds_d3 <= 28'b0;
-            scale_cmds_d4 <= 28'b0;
-            scale_cmds_d5 <= 28'b0;
-            scale_cmds_d6 <= 28'b0;
+            scale_cmds_d1 <= 0; scale_cmds_d2 <= 0; scale_cmds_d3 <= 0;
+            scale_cmds_d4 <= 0; scale_cmds_d5 <= 0; scale_cmds_d6 <= 0;
         end else begin
             sigma_stage1 <= sigma_stage0;
             sigma_stage2 <= sigma_stage1;
@@ -67,80 +54,57 @@ module cordic_pipeline (
         end
     end
 
+    // CORDIC stages
     wire signed [W-1:0] x1_comb, y1_comb, x2_comb, y2_comb, x3_comb, y3_comb;
     wire signed [W-1:0] x4_comb, y4_comb, x5_comb, y5_comb, x6_comb, y6_comb;
-   
+
     reg signed [W-1:0] x1_reg, y1_reg, x2_reg, y2_reg, x3_reg, y3_reg;
     reg signed [W-1:0] x4_reg, y4_reg, x5_reg, y5_reg, x6_reg, y6_reg;
 
-    cordic_stage #(.Width(W), .SHIFT(0)) st0 (x0, y0, sigma_stage0[23:20], x1_comb, y1_comb);
+    cordic_stage #(.Width(W), .SHIFT(0))  st0 (x0,          y0,          sigma_stage0[23:20], x1_comb, y1_comb);
+    cordic_stage #(.Width(W), .SHIFT(3))  st1 (x1_reg,     y1_reg,     sigma_stage1[19:16], x2_comb, y2_comb);
+    cordic_stage #(.Width(W), .SHIFT(6))  st2 (x2_reg,     y2_reg,     sigma_stage2[15:12], x3_comb, y3_comb);
+    cordic_stage #(.Width(W), .SHIFT(9))  st3 (x3_reg,     y3_reg,     sigma_stage3[11:8],  x4_comb, y4_comb);
+    cordic_stage #(.Width(W), .SHIFT(12)) st4 (x4_reg,     y4_reg,     sigma_stage4[7:4],   x5_comb, y5_comb);
+    cordic_stage #(.Width(W), .SHIFT(15)) st5 (x5_reg,     y5_reg,     sigma_stage5[3:0],   x6_comb, y6_comb);
+
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            x1_reg <= 16'sb0; y1_reg <= 16'sb0;
+            {x1_reg, y1_reg} <= 0;
+            {x2_reg, y2_reg} <= 0;
+            {x3_reg, y3_reg} <= 0;
+            {x4_reg, y4_reg} <= 0;
+            {x5_reg, y5_reg} <= 0;
+            {x6_reg, y6_reg} <= 0;
         end else begin
             x1_reg <= x1_comb; y1_reg <= y1_comb;
-        end
-    end
-
-    cordic_stage #(.Width(W), .SHIFT(3)) st1 (x1_reg, y1_reg, sigma_stage1[19:16], x2_comb, y2_comb);
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            x2_reg <= 16'sb0; y2_reg <= 16'sb0;
-        end else begin
             x2_reg <= x2_comb; y2_reg <= y2_comb;
-        end
-    end
-
-    cordic_stage #(.Width(W), .SHIFT(6)) st2 (x2_reg, y2_reg, sigma_stage2[15:12], x3_comb, y3_comb);
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            x3_reg <= 16'sb0; y3_reg <= 16'sb0;
-        end else begin
             x3_reg <= x3_comb; y3_reg <= y3_comb;
-        end
-    end
-
-    cordic_stage #(.Width(W), .SHIFT(9)) st3 (x3_reg, y3_reg, sigma_stage3[11:8], x4_comb, y4_comb);
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            x4_reg <= 16'sb0; y4_reg <= 16'sb0;
-        end else begin
             x4_reg <= x4_comb; y4_reg <= y4_comb;
-        end
-    end
-
-    cordic_stage #(.Width(W), .SHIFT(12)) st4 (x4_reg, y4_reg, sigma_stage4[7:4], x5_comb, y5_comb);
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            x5_reg <= 16'sb0; y5_reg <= 16'sb0;
-        end else begin
             x5_reg <= x5_comb; y5_reg <= y5_comb;
-        end
-    end
-
-    cordic_stage #(.Width(W), .SHIFT(15)) st5 (x5_reg, y5_reg, sigma_stage5[3:0], x6_comb, y6_comb);
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            x6_reg <= 16'sb0; y6_reg <= 16'sb0;
-        end else begin
             x6_reg <= x6_comb; y6_reg <= y6_comb;
         end
     end
 
+    // ====================== SCALE COMPENSATION (ĐÃ SỬA) ======================
     wire [6:0] cmd0 = scale_cmds_d6[6:0];
     wire [6:0] cmd1 = scale_cmds_d6[13:7];
     wire [6:0] cmd2 = scale_cmds_d6[20:14];
     wire [6:0] cmd3 = scale_cmds_d6[27:21];
 
-    wire signed [W+31:0] term_x0 = (cmd0[6]) ? (cmd0[5] ? -(x6_reg << cmd0[4:0]) : (x6_reg << cmd0[4:0])) : 0;
-    wire signed [W+31:0] term_x1 = (cmd1[6]) ? (cmd1[5] ? -(x6_reg << cmd1[4:0]) : (x6_reg << cmd1[4:0])) : 0;
-    wire signed [W+31:0] term_x2 = (cmd2[6]) ? (cmd2[5] ? -(x6_reg << cmd2[4:0]) : (x6_reg << cmd2[4:0])) : 0;
-    wire signed [W+31:0] term_x3 = (cmd3[6]) ? (cmd3[5] ? -(x6_reg << cmd3[4:0]) : (x6_reg << cmd3[4:0])) : 0;
+    // Mở rộng dấu trước khi shift (rất quan trọng)
+    wire signed [W+31:0] x6_ext = {{(W+16){x6_reg[W-1]}}, x6_reg};
+    wire signed [W+31:0] y6_ext = {{(W+16){y6_reg[W-1]}}, y6_reg};
 
-    wire signed [W+31:0] term_y0 = (cmd0[6]) ? (cmd0[5] ? -(y6_reg << cmd0[4:0]) : (y6_reg << cmd0[4:0])) : 0;
-    wire signed [W+31:0] term_y1 = (cmd1[6]) ? (cmd1[5] ? -(y6_reg << cmd1[4:0]) : (y6_reg << cmd1[4:0])) : 0;
-    wire signed [W+31:0] term_y2 = (cmd2[6]) ? (cmd2[5] ? -(y6_reg << cmd2[4:0]) : (y6_reg << cmd2[4:0])) : 0;
-    wire signed [W+31:0] term_y3 = (cmd3[6]) ? (cmd3[5] ? -(y6_reg << cmd3[4:0]) : (y6_reg << cmd3[4:0])) : 0;
+    wire signed [W+31:0] term_x0 = (cmd0[6]) ? (cmd0[5] ? -(x6_ext << cmd0[4:0]) : (x6_ext << cmd0[4:0])) : 0;
+    wire signed [W+31:0] term_x1 = (cmd1[6]) ? (cmd1[5] ? -(x6_ext << cmd1[4:0]) : (x6_ext << cmd1[4:0])) : 0;
+    wire signed [W+31:0] term_x2 = (cmd2[6]) ? (cmd2[5] ? -(x6_ext << cmd2[4:0]) : (x6_ext << cmd2[4:0])) : 0;
+    wire signed [W+31:0] term_x3 = (cmd3[6]) ? (cmd3[5] ? -(x6_ext << cmd3[4:0]) : (x6_ext << cmd3[4:0])) : 0;
+
+    wire signed [W+31:0] term_y0 = (cmd0[6]) ? (cmd0[5] ? -(y6_ext << cmd0[4:0]) : (y6_ext << cmd0[4:0])) : 0;
+    wire signed [W+31:0] term_y1 = (cmd1[6]) ? (cmd1[5] ? -(y6_ext << cmd1[4:0]) : (y6_ext << cmd1[4:0])) : 0;
+    wire signed [W+31:0] term_y2 = (cmd2[6]) ? (cmd2[5] ? -(y6_ext << cmd2[4:0]) : (y6_ext << cmd2[4:0])) : 0;
+    wire signed [W+31:0] term_y3 = (cmd3[6]) ? (cmd3[5] ? -(y6_ext << cmd3[4:0]) : (y6_ext << cmd3[4:0])) : 0;
 
     reg signed [W+31:0] term_x0_r, term_x1_r, term_x2_r, term_x3_r;
     reg signed [W+31:0] term_y0_r, term_y1_r, term_y2_r, term_y3_r;
@@ -192,4 +156,5 @@ module cordic_pipeline (
             y_out <= full_y[45:30];
         end
     end
+
 endmodule

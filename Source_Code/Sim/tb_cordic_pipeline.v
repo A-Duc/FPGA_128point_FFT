@@ -1,75 +1,155 @@
 `timescale 1ns / 1ps
 
-module tb_cor_st2_p1;
+module tb_cordic_pipeline;
 
-    localparam TCLK = 10; 
+    localparam integer TCLK = 10;
+    localparam integer N_SAMPLES = 15;
+    localparam integer PIPELINE_LAT = 9;
 
     reg clk;
-    reg [4:0] n3;
+    reg rst;
+    reg in_valid;
+
     reg signed [15:0] x_in;
     reg signed [15:0] y_in;
+    reg [4:0] n3;
 
     wire [15:0] x_out;
     wire [15:0] y_out;
 
+    reg [4:0] in_id;
+    reg [4:0] id_d0, id_d1, id_d2, id_d3, id_d4, id_d5, id_d6, id_d7, id_d8;
+    reg       v_d0,  v_d1,  v_d2,  v_d3,  v_d4,  v_d5,  v_d6,  v_d7,  v_d8;
+
+    reg signed [15:0] x_vec [0:N_SAMPLES-1];
+    reg signed [15:0] y_vec [0:N_SAMPLES-1];
+    reg [4:0]         n3_vec [0:N_SAMPLES-1];
+
+    integer i;
+    integer cyc;
+    integer in_cnt;
+    integer out_cnt;
+    real in_x_q88, in_y_q88;
+    real out_x_q88, out_y_q88;
+
     cor_st2_p1 dut (
-        .n3(n3),
-        .clk(clk),
-        .x_in(x_in),
-        .y_in(y_in),
-        .x_out(x_out),
-        .y_out(y_out)
+        .n3         (n3),
+        .clk        (clk),
+        .rst        (rst),
+        .x_in       (x_in),
+        .y_in       (y_in),
+        .x_out      (x_out),
+        .y_out      (y_out)
     );
 
     initial clk = 1'b0;
-    always #(TCLK / 2) clk = ~clk;
+    always #(TCLK/2) clk = ~clk;
 
-    // Task in kết quả theo định dạng cột
-    task display_result;
+    task load_vectors;
         begin
-            $display("INPUT: n3=%2d, x=%6d, y=%6d  =>  OUTPUT: x=%6d, y=%6d", 
-                     n3, $signed(x_in), $signed(y_in), $signed(x_out), $signed(y_out));
+            x_vec[0]  = 16'sd16384;   y_vec[0]  = 16'sd8192;    n3_vec[0]  = 5'd0;
+            x_vec[1]  = 16'sd12000;   y_vec[1]  = -16'sd6000;   n3_vec[1]  = 5'd1;
+            x_vec[2]  = -16'sd14000;  y_vec[2]  = 16'sd4000;    n3_vec[2]  = 5'd2;
+            x_vec[3]  = 16'sd7000;    y_vec[3]  = 16'sd15000;   n3_vec[3]  = 5'd3;
+            x_vec[4]  = -16'sd9000;   y_vec[4]  = -16'sd9000;   n3_vec[4]  = 5'd4;
+            x_vec[5]  = 16'sd3000;    y_vec[5]  = -16'sd12000;  n3_vec[5]  = 5'd5;
+            x_vec[6]  = 16'sd500;     y_vec[6]  = 16'sd500;     n3_vec[6]  = 5'd6;
+            x_vec[7]  = -16'sd4500;   y_vec[7]  = 16'sd2000;    n3_vec[7]  = 5'd7;
+            x_vec[8]  = 16'sd15000;   y_vec[8]  = -16'sd3000;   n3_vec[8]  = 5'd8;
+            x_vec[9]  = -16'sd2000;   y_vec[9]  = 16'sd16000;   n3_vec[9]  = 5'd9;
+            x_vec[10] = 16'sd1000;    y_vec[10] = -16'sd1000;   n3_vec[10] = 5'd10;
+            x_vec[11] = -16'sd12345;  y_vec[11] = 16'sd2345;    n3_vec[11] = 5'd11;
+            x_vec[12] = 16'sd8191;    y_vec[12] = 16'sd4095;    n3_vec[12] = 5'd12;
+            x_vec[13] = -16'sd8192;   y_vec[13] = -16'sd2048;   n3_vec[13] = 5'd13;
+            x_vec[14] = 16'sd2047;    y_vec[14] = -16'sd16383;  n3_vec[14] = 5'd14;
         end
     endtask
 
-    task wait_pipeline;
-        begin
-            repeat (20) @(posedge clk);
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            cyc <= 0;
+            in_cnt <= 0;
+            out_cnt <= 0;
+
+            id_d0 <= 0; id_d1 <= 0; id_d2 <= 0; id_d3 <= 0; id_d4 <= 0;
+            id_d5 <= 0; id_d6 <= 0; id_d7 <= 0; id_d8 <= 0;
+            v_d0 <= 0; v_d1 <= 0; v_d2 <= 0; v_d3 <= 0; v_d4 <= 0;
+            v_d5 <= 0; v_d6 <= 0; v_d7 <= 0; v_d8 <= 0;
+        end else begin
+            cyc <= cyc + 1;
+
+            id_d8 <= id_d7; id_d7 <= id_d6; id_d6 <= id_d5; id_d5 <= id_d4;
+            id_d4 <= id_d3; id_d3 <= id_d2; id_d2 <= id_d1; id_d1 <= id_d0;
+            id_d0 <= in_id;
+
+            v_d8 <= v_d7; v_d7 <= v_d6; v_d6 <= v_d5; v_d5 <= v_d4;
+            v_d4 <= v_d3; v_d3 <= v_d2; v_d2 <= v_d1; v_d1 <= v_d0;
+            v_d0 <= in_valid;
+
+            if (in_valid) begin
+                in_cnt <= in_cnt + 1;
+                in_x_q88 = $itor($signed(x_in)) / 256.0;
+                in_y_q88 = $itor($signed(y_in)) / 256.0;
+                $display("[C%0d] IN  id=%0d | n3=%0d | x=%0d y=%0d | x_q8.8=%0.6f y_q8.8=%0.6f",
+                         cyc, in_id, n3,
+                         $signed(x_in), $signed(y_in), in_x_q88, in_y_q88);
+            end
         end
-    endtask
+    end
+
+    always @(negedge clk) begin
+        if (!rst && v_d8) begin
+            out_cnt = out_cnt + 1;
+            out_x_q88 = $itor($signed(x_out)) / 256.0;
+            out_y_q88 = $itor($signed(y_out)) / 256.0;
+            $display("[C%0d] OUT id=%0d | x_out=%0d y_out=%0d | x_q8.8=%0.6f y_q8.8=%0.6f",
+                     cyc, id_d8, $signed(x_out), $signed(y_out), out_x_q88, out_y_q88);
+        end
+    end
 
     initial begin
-        $display("----------------------------------------------------------------------");
-        $display("   MO PHONG CORDIC PIPELINE - CHE DO QUAY VECTOR (Y_IN != 0)");
-        $display("----------------------------------------------------------------------");
-        
-        n3 = 5'd0; x_in = 16'sd0; y_in = 16'sd0;
-        @(posedge clk);
+        load_vectors();
 
-        // Test case 1: n3 = 0 (Góc 0 độ)
-        n3 = 5'd0; x_in = 16'sh4000; y_in = 16'sh2000; // y_in = 8192
-        wait_pipeline();
-        display_result();
+        $display("================================================================");
+        $display("              CORDIC PIPELINE TESTBENCH");
+        $display("  Streaming test: %0d samples, no wait between samples", N_SAMPLES);
+        $display("  Pipeline latency tracking: %0d clock cycles", PIPELINE_LAT);
+        $display("================================================================");
 
-        // Test case 2: n3 = 10 (Góc ~28.1 độ)
-        n3 = 5'd10; x_in = 16'sh4000; y_in = 16'sh2000; // y_in = 8192
-        wait_pipeline();
-        display_result();
+        rst = 1'b1;
+        in_valid = 1'b0;
+        x_in = 0;
+        y_in = 0;
+        n3 = 0;
+        in_id = 0;
 
-        // Test case 3: n3 = 31 (Góc ~87.2 độ)
-        n3 = 5'd31; x_in = 16'sh4000; y_in = 16'sh2000; // y_in = 8192
-        wait_pipeline();
-        display_result();
+        repeat (4) @(posedge clk);
+        rst = 1'b0;
 
-        // Bonus: Chạy một vòng lặp nhỏ từ 0 đến 5 để xem sự thay đổi liên tục
-        $display("--- Quet nhanh n3 tu 0 den 5 ---");
-        for (integer i = 0; i <= 5; i = i + 1) begin
-            n3 = i; x_in = 16'sh4000; y_in = 16'sh2000; // y_in = 8192
-            wait_pipeline();
-            display_result();
+        $display("\n--- Feed 15 samples continuously (1 sample / cycle) ---");
+        for (i = 0; i < N_SAMPLES; i = i + 1) begin
+            @(negedge clk);
+            in_valid = 1'b1;
+            x_in = x_vec[i];
+            y_in = y_vec[i];
+            n3 = n3_vec[i];
+            in_id = i[4:0];
         end
 
-        $display("----------------------------------------------------------------------");
+        @(negedge clk);
+        in_valid = 1'b0;
+        x_in = 0;
+        y_in = 0;
+        n3 = 0;
+        in_id = 0;
+
+        $display("\nInput samples  seen = %0d", in_cnt);
+        $display("Output samples seen = %0d", out_cnt);
+        $display("No pipeline drain wait was applied (as requested).");
+
+        $display("================================================================");
+        $display("                        END OF SIMULATION");
+        $display("================================================================");
         $finish;
     end
 
