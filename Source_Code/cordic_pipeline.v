@@ -5,7 +5,7 @@ module cordic_pipeline (
     input wire signed [15:0] x_in,
     input wire signed [15:0] y_in,
     input wire [1:0] quad,
-    input wire [23:0] sigma,
+    input wire [29:0] sigma,
     input wire [27:0] scale_cmds,
     output reg [15:0] x_out,
     output reg [15:0] y_out
@@ -24,9 +24,8 @@ module cordic_pipeline (
         endcase
     end
 
-    // Pipeline control signals
-    wire [23:0] sigma_stage0 = sigma;
-    reg [23:0] sigma_stage1, sigma_stage2, sigma_stage3, sigma_stage4, sigma_stage5;
+    wire [29:0] sigma_stage0 = sigma;
+    reg [29:0] sigma_stage1, sigma_stage2, sigma_stage3, sigma_stage4, sigma_stage5;
 
     reg [27:0] scale_cmds_d1, scale_cmds_d2, scale_cmds_d3;
     reg [27:0] scale_cmds_d4, scale_cmds_d5, scale_cmds_d6;
@@ -54,19 +53,18 @@ module cordic_pipeline (
         end
     end
 
-    // CORDIC stages
     wire signed [W-1:0] x1_comb, y1_comb, x2_comb, y2_comb, x3_comb, y3_comb;
     wire signed [W-1:0] x4_comb, y4_comb, x5_comb, y5_comb, x6_comb, y6_comb;
 
     reg signed [W-1:0] x1_reg, y1_reg, x2_reg, y2_reg, x3_reg, y3_reg;
     reg signed [W-1:0] x4_reg, y4_reg, x5_reg, y5_reg, x6_reg, y6_reg;
 
-    cordic_stage #(.Width(W), .SHIFT(0))  st0 (x0,          y0,          sigma_stage0[23:20], x1_comb, y1_comb);
-    cordic_stage #(.Width(W), .SHIFT(3))  st1 (x1_reg,     y1_reg,     sigma_stage1[19:16], x2_comb, y2_comb);
-    cordic_stage #(.Width(W), .SHIFT(6))  st2 (x2_reg,     y2_reg,     sigma_stage2[15:12], x3_comb, y3_comb);
-    cordic_stage #(.Width(W), .SHIFT(9))  st3 (x3_reg,     y3_reg,     sigma_stage3[11:8],  x4_comb, y4_comb);
-    cordic_stage #(.Width(W), .SHIFT(12)) st4 (x4_reg,     y4_reg,     sigma_stage4[7:4],   x5_comb, y5_comb);
-    cordic_stage #(.Width(W), .SHIFT(15)) st5 (x5_reg,     y5_reg,     sigma_stage5[3:0],   x6_comb, y6_comb);
+    cordic_stage #(.Width(W), .SHIFT(0))  st0 (x0,      y0,      sigma_stage0[29:25], x1_comb, y1_comb);
+    cordic_stage #(.Width(W), .SHIFT(4))  st1 (x1_reg,  y1_reg,  sigma_stage1[24:20], x2_comb, y2_comb);
+    cordic_stage #(.Width(W), .SHIFT(8))  st2 (x2_reg,  y2_reg,  sigma_stage2[19:15], x3_comb, y3_comb);
+    cordic_stage #(.Width(W), .SHIFT(12)) st3 (x3_reg,  y3_reg,  sigma_stage3[14:10], x4_comb, y4_comb);
+    cordic_stage #(.Width(W), .SHIFT(16)) st4 (x4_reg,  y4_reg,  sigma_stage4[9:5],   x5_comb, y5_comb);
+    cordic_stage #(.Width(W), .SHIFT(20)) st5 (x5_reg,  y5_reg,  sigma_stage5[4:0],   x6_comb, y6_comb);
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
@@ -86,13 +84,12 @@ module cordic_pipeline (
         end
     end
 
-    // ====================== SCALE COMPENSATION (ĐÃ SỬA) ======================
+    // ====================== SCALE COMPENSATION ======================
     wire [6:0] cmd0 = scale_cmds_d6[6:0];
     wire [6:0] cmd1 = scale_cmds_d6[13:7];
     wire [6:0] cmd2 = scale_cmds_d6[20:14];
     wire [6:0] cmd3 = scale_cmds_d6[27:21];
 
-    // Mở rộng dấu trước khi shift (rất quan trọng)
     wire signed [W+31:0] x6_ext = {{(W+16){x6_reg[W-1]}}, x6_reg};
     wire signed [W+31:0] y6_ext = {{(W+16){y6_reg[W-1]}}, y6_reg};
 

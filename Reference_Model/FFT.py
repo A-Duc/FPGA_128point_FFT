@@ -4,7 +4,7 @@ def FFT(P):
     n = len(P)
     if (n == 1): return P;
 
-    omega = cmath.exp(2j * cmath.pi / n)
+    omega = cmath.exp(-2j * cmath.pi / n)
 
     P_e = P[0::2]
     P_o = P[1::2]

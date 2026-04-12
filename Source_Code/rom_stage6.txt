@@ -18,7 +18,7 @@ always @(*) begin
 end
 
 --------------------------------------------------
-// Verilog ROM Table for Stage 6 - Path p=3
+// Verilog ROM Table for Stage 6 - Path = 3, p=3
 always @(*) begin
     case (n3)
         3'd0: {quad, sigma, scale_cmds} = {2'd0, 24'h000000, 28'h000005E}; // Angle: 0.0000 rad
