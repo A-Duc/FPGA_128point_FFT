@@ -5,10 +5,7 @@ module commutator #(
     input  wire Clk,
     input  wire Reset,
 
-    input  wire upper_mux0_sel,
-    input  wire upper_mux1_sel,
-    input  wire lower_mux0_sel,
-    input  wire lower_mux1_sel,
+    input  wire mux_sel,
 
     input  wire signed [BIT_WIDTH-1:0] iData0_r,
     input  wire signed [BIT_WIDTH-1:0] iData0_i,
@@ -89,20 +86,20 @@ module commutator #(
         .oData_i(out_delay_path3_i)
     );
 
-    assign {in_delay_path2b_r, in_delay_path2b_i} =
-           (lower_mux0_sel) ? {out_delay_path3_r, out_delay_path3_i}
-                            : {iData1_r,          iData1_i};
-
     assign {in_delay_path0_r, in_delay_path0_i} =
-           (upper_mux0_sel) ? {out_delay_path2a_r, out_delay_path2a_i}
-                            : {iData0_r,           iData0_i};
+           (mux_sel) ? {out_delay_path2a_r, out_delay_path2a_i}
+                     : {iData0_r,           iData0_i};
 
     assign {oData1_r, oData1_i} =
-           (upper_mux1_sel) ? {iData0_r,           iData0_i}
-                            : {out_delay_path2a_r, out_delay_path2a_i};
+           (mux_sel) ? {iData0_r,           iData0_i}
+                     : {out_delay_path2a_r, out_delay_path2a_i};
+
+    assign {in_delay_path2b_r, in_delay_path2b_i} =
+           (mux_sel) ? {out_delay_path3_r, out_delay_path3_i}
+                     : {iData1_r,          iData1_i};
 
     assign {oData3_r, oData3_i} =
-           (lower_mux1_sel) ? {out_delay_path3_r, out_delay_path3_i}
-                            : {iData1_r,          iData1_i};
+           (mux_sel) ? {iData1_r,          iData1_i}
+                     : {out_delay_path3_r, out_delay_path3_i};
 
 endmodule

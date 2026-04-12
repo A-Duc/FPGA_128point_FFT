@@ -1,6 +1,5 @@
 module fft_twiddle_stage#(
     parameter BIT_WIDTH   = 16,
-    parameter DELAY_DEPTH = 9,
     parameter SLOT_WIDTH  = 5
 )(
     input  wire Clk,
@@ -25,15 +24,16 @@ module fft_twiddle_stage#(
     output reg                   oData_valid,
     output reg  [SLOT_WIDTH-1:0] oData_slot,
 
-    output reg signed [BIT_WIDTH-1:0] oData0_r,
-    output reg signed [BIT_WIDTH-1:0] oData0_i,
-    output reg signed [BIT_WIDTH-1:0] oData1_r,
-    output reg signed [BIT_WIDTH-1:0] oData1_i,
-    output reg signed [BIT_WIDTH-1:0] oData2_r,
-    output reg signed [BIT_WIDTH-1:0] oData2_i,
-    output reg signed [BIT_WIDTH-1:0] oData3_r,
-    output reg signed [BIT_WIDTH-1:0] oData3_i
+    output wire signed [BIT_WIDTH-1:0] oData0_r,
+    output wire signed [BIT_WIDTH-1:0] oData0_i,
+    output wire signed [BIT_WIDTH-1:0] oData1_r,
+    output wire signed [BIT_WIDTH-1:0] oData1_i,
+    output wire signed [BIT_WIDTH-1:0] oData2_r,
+    output wire signed [BIT_WIDTH-1:0] oData2_i,
+    output wire signed [BIT_WIDTH-1:0] oData3_r,
+    output wire signed [BIT_WIDTH-1:0] oData3_i
 );
+    localparam CORDIC_DEPTH = 9;
 
     wire [1:0]  path1_quad;
     wire [23:0] path1_sigma;
@@ -60,6 +60,23 @@ module fft_twiddle_stage#(
     wire signed [BIT_WIDTH-1:0] lower_sum_i_w;
     wire signed [BIT_WIDTH-1:0] lower_dif_r_w;
     wire signed [BIT_WIDTH-1:0] lower_dif_i_w;
+
+    reg [CORDIC_DEPTH-2:0]                valid_pipe;
+    reg [SLOT_WIDTH*(CORDIC_DEPTH-1)-1:0] slot_pipe;
+
+    always @(posedge Clk or posedge Reset) begin
+        if (Reset) begin
+            oData_valid <= 1'b0;
+            oData_slot  <= {SLOT_WIDTH{1'b0}};
+            valid_pipe  <= {(CORDIC_DEPTH-1){1'b0}};
+            slot_pipe   <= {(SLOT_WIDTH*(CORDIC_DEPTH-1)){1'b0}};
+        end else begin
+            valid_pipe  <= {valid_pipe[CORDIC_DEPTH-3:0], iData_valid};
+            slot_pipe   <= {slot_pipe[SLOT_WIDTH*(CORDIC_DEPTH-2)-1:0], iData_slot};
+            oData_valid <= valid_pipe[CORDIC_DEPTH-2];
+            oData_slot  <= slot_pipe[SLOT_WIDTH*(CORDIC_DEPTH-1)-1:SLOT_WIDTH*(CORDIC_DEPTH-2)];
+        end
+    end
 
     cmplx_add_sub #(
         .BIT_WIDTH(BIT_WIDTH)
@@ -89,7 +106,7 @@ module fft_twiddle_stage#(
 
     delay_line #(
         .BIT_WIDTH(BIT_WIDTH),
-        .DELAY_DEPTH(DELAY_DEPTH)
+        .DELAY_DEPTH(CORDIC_DEPTH)
     ) delay_path0 (
         .Clk    (Clk),
         .Reset  (Reset),
@@ -97,6 +114,42 @@ module fft_twiddle_stage#(
         .iData_i(upper_sum_i_w),
         .oData_r(oData0_r),
         .oData_i(oData0_i)
+    );
+
+    fft_cordic_rotator rotator_path1 (
+        .clk       (Clk),
+        .rst       (Reset),
+        .x_in      (upper_dif_r_w),
+        .y_in      (upper_dif_i_w),
+        .quad      (path1_quad),
+        .sigma     (path1_sigma),
+        .scale_cmds(path1_scale_cmds),
+        .x_out     (oData1_r),
+        .y_out     (oData1_i)
+    );
+
+    fft_cordic_rotator rotator_path2 (
+        .clk       (Clk),
+        .rst       (Reset),
+        .x_in      (lower_sum_r_w),
+        .y_in      (lower_sum_i_w),
+        .quad      (path2_quad),
+        .sigma     (path2_sigma),
+        .scale_cmds(path2_scale_cmds),
+        .x_out     (oData2_r),
+        .y_out     (oData2_i)
+    );
+
+    fft_cordic_rotator rotator_path3 (
+        .clk       (Clk),
+        .rst       (Reset),
+        .x_in      (lower_dif_r_w),
+        .y_in      (lower_dif_i_w),
+        .quad      (path3_quad),
+        .sigma     (path3_sigma),
+        .scale_cmds(path3_scale_cmds),
+        .x_out     (oData3_r),
+        .y_out     (oData3_i)
     );
 
 endmodule
