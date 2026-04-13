@@ -1,4 +1,4 @@
-module fft_twiddle_stage #(
+﻿module fft_twiddle_stage #(
     parameter BIT_WIDTH  = 16,
     parameter SLOT_WIDTH = 5
 )(

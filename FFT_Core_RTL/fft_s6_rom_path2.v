@@ -1,4 +1,4 @@
-module fft_s6_rom_path2(
+﻿module fft_s6_rom_path2(
     input  wire        iAddress,
     output reg  [49:0] oData
 );

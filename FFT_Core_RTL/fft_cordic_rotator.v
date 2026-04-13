@@ -1,4 +1,4 @@
-module fft_cordic_rotator #(
+﻿module fft_cordic_rotator #(
     parameter BIT_WIDTH       = 16,
     parameter QUAD_WIDTH      = 2,
     parameter SIGMA_WIDTH     = 24,
