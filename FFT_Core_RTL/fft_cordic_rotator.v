@@ -4,19 +4,19 @@ module fft_cordic_rotator #(
     parameter SIGMA_WIDTH     = 24,
     parameter SCALE_CMD_WIDTH = 28
 )(
-    input  wire                         Clk,
-    input  wire                         Reset,
-    input  wire signed [BIT_WIDTH-1:0]  iData_r,
-    input  wire signed [BIT_WIDTH-1:0]  iData_i,
-    input  wire        [QUAD_WIDTH-1:0] iQuad,
+    input  wire                          Clk,
+    input  wire                          Reset,
+    input  wire signed [BIT_WIDTH-1:0]   iData_r,
+    input  wire signed [BIT_WIDTH-1:0]   iData_i,
+    input  wire        [QUAD_WIDTH-1:0]  iQuad,
     input  wire        [SIGMA_WIDTH-1:0] iSigma,
     input  wire        [SCALE_CMD_WIDTH-1:0] iScale_cmds,
 
-    output reg signed [BIT_WIDTH-1:0]   oData_r,
-    output reg signed [BIT_WIDTH-1:0]   oData_i
+    output reg signed [BIT_WIDTH-1:0]    oData_r,
+    output reg signed [BIT_WIDTH-1:0]    oData_i
 );
 
-    localparam integer NUM_ROT_STAGES   = 6;
+    localparam integer NUM_ROT_STAGES    = 6;
     localparam integer SCALE_FIELD_WIDTH = 7;
     localparam integer EXT_WIDTH         = BIT_WIDTH + 32;
     localparam integer PAIR_SUM_WIDTH    = EXT_WIDTH + 1;
@@ -27,7 +27,9 @@ module fft_cordic_rotator #(
     reg signed [BIT_WIDTH-1:0] quadrant_rot_r;
     reg signed [BIT_WIDTH-1:0] quadrant_rot_i;
 
-    wire [SIGMA_WIDTH-1:0] sigma_stage0;
+    reg signed [BIT_WIDTH-1:0] pre_r_reg;
+    reg signed [BIT_WIDTH-1:0] pre_i_reg;
+    reg        [SIGMA_WIDTH-1:0] sigma_pre_reg;
 
     reg [SIGMA_WIDTH-1:0] sigma_stage1;
     reg [SIGMA_WIDTH-1:0] sigma_stage2;
@@ -35,6 +37,7 @@ module fft_cordic_rotator #(
     reg [SIGMA_WIDTH-1:0] sigma_stage4;
     reg [SIGMA_WIDTH-1:0] sigma_stage5;
 
+    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d0;
     reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d1;
     reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d2;
     reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d3;
@@ -107,8 +110,6 @@ module fft_cordic_rotator #(
     wire signed [FULL_SUM_WIDTH-1:0] full_sum_r;
     wire signed [FULL_SUM_WIDTH-1:0] full_sum_i;
 
-    assign sigma_stage0 = iSigma;
-
     always @(*) begin
         case (iQuad)
             2'd0: begin
@@ -136,12 +137,17 @@ module fft_cordic_rotator #(
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
+            pre_r_reg     <= {BIT_WIDTH{1'b0}};
+            pre_i_reg     <= {BIT_WIDTH{1'b0}};
+            sigma_pre_reg <= {SIGMA_WIDTH{1'b0}};
+
             sigma_stage1 <= {SIGMA_WIDTH{1'b0}};
             sigma_stage2 <= {SIGMA_WIDTH{1'b0}};
             sigma_stage3 <= {SIGMA_WIDTH{1'b0}};
             sigma_stage4 <= {SIGMA_WIDTH{1'b0}};
             sigma_stage5 <= {SIGMA_WIDTH{1'b0}};
 
+            scale_cmds_d0 <= {SCALE_CMD_WIDTH{1'b0}};
             scale_cmds_d1 <= {SCALE_CMD_WIDTH{1'b0}};
             scale_cmds_d2 <= {SCALE_CMD_WIDTH{1'b0}};
             scale_cmds_d3 <= {SCALE_CMD_WIDTH{1'b0}};
@@ -149,13 +155,18 @@ module fft_cordic_rotator #(
             scale_cmds_d5 <= {SCALE_CMD_WIDTH{1'b0}};
             scale_cmds_d6 <= {SCALE_CMD_WIDTH{1'b0}};
         end else begin
-            sigma_stage1 <= sigma_stage0;
+            pre_r_reg     <= quadrant_rot_r;
+            pre_i_reg     <= quadrant_rot_i;
+            sigma_pre_reg <= iSigma;
+
+            sigma_stage1 <= sigma_pre_reg;
             sigma_stage2 <= sigma_stage1;
             sigma_stage3 <= sigma_stage2;
             sigma_stage4 <= sigma_stage3;
             sigma_stage5 <= sigma_stage4;
 
-            scale_cmds_d1 <= iScale_cmds;
+            scale_cmds_d0 <= iScale_cmds;
+            scale_cmds_d1 <= scale_cmds_d0;
             scale_cmds_d2 <= scale_cmds_d1;
             scale_cmds_d3 <= scale_cmds_d2;
             scale_cmds_d4 <= scale_cmds_d3;
@@ -168,9 +179,9 @@ module fft_cordic_rotator #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(0)
     ) stage0 (
-        .iData_r(quadrant_rot_r),
-        .iData_i(quadrant_rot_i),
-        .iSigma (sigma_stage0[23:20]),
+        .iData_r(pre_r_reg),
+        .iData_i(pre_i_reg),
+        .iSigma (sigma_pre_reg[23:20]),
         .oData_r(stage1_r_comb),
         .oData_i(stage1_i_comb)
     );

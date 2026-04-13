@@ -34,13 +34,12 @@ module fft_twiddle_stage #(
     output wire signed [BIT_WIDTH-1:0]  oData3_i
 );
 
-    localparam integer ROM_DATA_WIDTH     = 54;
-    localparam integer QUAD_WIDTH         = 2;
-    localparam integer SIGMA_WIDTH        = 24;
-    localparam integer SCALE_CMD_WIDTH    = 28;
-    localparam integer CORDIC_DEPTH       = 9;
-    localparam integer META_DELAY_DEPTH   = CORDIC_DEPTH - 1;
-    localparam integer META_SLOT_PIPE_W   = SLOT_WIDTH * META_DELAY_DEPTH;
+    localparam integer QUAD_WIDTH       = 2;
+    localparam integer SIGMA_WIDTH      = 24;
+    localparam integer SCALE_CMD_WIDTH  = 28;
+    localparam integer CORDIC_DEPTH     = 10;
+    localparam integer META_DELAY_DEPTH = CORDIC_DEPTH - 1;
+    localparam integer META_SLOT_PIPE_W = SLOT_WIDTH * META_DELAY_DEPTH;
 
     wire [QUAD_WIDTH-1:0]      path1_quad;
     wire [SIGMA_WIDTH-1:0]     path1_sigma;
@@ -67,9 +66,9 @@ module fft_twiddle_stage #(
     reg  [META_DELAY_DEPTH-1:0] valid_pipe;
     reg  [META_SLOT_PIPE_W-1:0] slot_pipe;
 
-    assign {path1_quad, path1_sigma, path1_scale_cmds} = iRom_data_path1[ROM_DATA_WIDTH-1:0];
-    assign {path2_quad, path2_sigma, path2_scale_cmds} = iRom_data_path2[ROM_DATA_WIDTH-1:0];
-    assign {path3_quad, path3_sigma, path3_scale_cmds} = iRom_data_path3[ROM_DATA_WIDTH-1:0];
+    assign {path1_quad, path1_sigma, path1_scale_cmds} = iRom_data_path1;
+    assign {path2_quad, path2_sigma, path2_scale_cmds} = iRom_data_path2;
+    assign {path3_quad, path3_sigma, path3_scale_cmds} = iRom_data_path3;
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
