@@ -12,6 +12,6 @@ iverilog -g2012 \
   -o "$TB_VVP" \
   -s "$TB_NAME" \
   "$SCRIPT_DIR/${TB_NAME}.v" \
-  "$SCRIPT_DIR/../Source_Code/"*.v
+  "$SCRIPT_DIR/../FFT_Core_RTL/"*.v
 
 echo "Compile done: $TB_VVP"
