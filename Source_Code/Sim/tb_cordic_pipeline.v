@@ -25,12 +25,20 @@ module tb_cordic_pipeline;
     reg signed [15:0] y_vec [0:N_SAMPLES-1];
     reg [4:0]         n3_vec [0:N_SAMPLES-1];
 
+    reg signed [15:0] x_ref [0:N_SAMPLES-1];
+    reg signed [15:0] y_ref [0:N_SAMPLES-1];
+
     integer i;
     integer cyc;
     integer in_cnt;
     integer out_cnt;
+    integer pass_cnt;
+    integer fail_cnt;
+    integer dx;
+    integer dy;
     real in_x_q88, in_y_q88;
     real out_x_q88, out_y_q88;
+    real exp_x_q88, exp_y_q88;
 
     cor_st2_p1 dut (
         .n3         (n3),
@@ -62,6 +70,22 @@ module tb_cordic_pipeline;
             x_vec[12] = 16'sd8191;    y_vec[12] = 16'sd4095;    n3_vec[12] = 5'd12;
             x_vec[13] = -16'sd8192;   y_vec[13] = -16'sd2048;   n3_vec[13] = 5'd13;
             x_vec[14] = 16'sd2047;    y_vec[14] = -16'sd16383;  n3_vec[14] = 5'd14;
+
+            x_ref[0]  = 16'sd16384;   y_ref[0]  = 16'sd8192;
+            x_ref[1]  = 16'sd11362;   y_ref[1]  = -16'sd7154;
+            x_ref[2]  = -16'sd13545;  y_ref[2]  = 16'sd5352;
+            x_ref[3]  = 16'sd9125;    y_ref[3]  = 16'sd13814;
+            x_ref[4]  = -16'sd10575;  y_ref[4]  = -16'sd7072;
+            x_ref[5]  = -16'sd7;      y_ref[5]  = -16'sd12353;
+            x_ref[6]  = 16'sd619;     y_ref[6]  = 16'sd337;
+            x_ref[7]  = -16'sd3570;   y_ref[7]  = 16'sd3404;
+            x_ref[8]  = 16'sd12729;   y_ref[8]  = -16'sd8524;
+            x_ref[9]  = 16'sd5034;    y_ref[9]  = 16'sd15321;
+            x_ref[10] = 16'sd412;     y_ref[10] = -16'sd1353;
+            x_ref[11] = -16'sd9403;   y_ref[11] = 16'sd8375;
+            x_ref[12] = 16'sd9059;    y_ref[12] = -16'sd1141;
+            x_ref[13] = -16'sd7818;   y_ref[13] = 16'sd3242;
+            x_ref[14] = -16'sd8835;   y_ref[14] = -16'sd13998;
         end
     endtask
 
@@ -70,6 +94,8 @@ module tb_cordic_pipeline;
             cyc <= 0;
             in_cnt <= 0;
             out_cnt <= 0;
+            pass_cnt <= 0;
+            fail_cnt <= 0;
 
             id_d0 <= 0; id_d1 <= 0; id_d2 <= 0; id_d3 <= 0; id_d4 <= 0;
             id_d5 <= 0; id_d6 <= 0; id_d7 <= 0; id_d8 <= 0;
@@ -102,8 +128,22 @@ module tb_cordic_pipeline;
             out_cnt = out_cnt + 1;
             out_x_q88 = $itor($signed(x_out)) / 256.0;
             out_y_q88 = $itor($signed(y_out)) / 256.0;
-            $display("[C%0d] OUT id=%0d | x_out=%0d y_out=%0d | x_q8.8=%0.6f y_q8.8=%0.6f",
-                     cyc, id_d8, $signed(x_out), $signed(y_out), out_x_q88, out_y_q88);
+            exp_x_q88 = $itor($signed(x_ref[id_d8])) / 256.0;
+            exp_y_q88 = $itor($signed(y_ref[id_d8])) / 256.0;
+            dx = $signed(x_out) - $signed(x_ref[id_d8]);
+            dy = $signed(y_out) - $signed(y_ref[id_d8]);
+
+            if ((dx == 0) && (dy == 0)) begin
+                pass_cnt = pass_cnt + 1;
+                $display("[C%0d] OUT id=%0d | x_out=%0d y_out=%0d | x_q8.8=%0.6f y_q8.8=%0.6f | ref=%0.6f %0.6f | err=%0d/%0d | PASS",
+                         cyc, id_d8, $signed(x_out), $signed(y_out), out_x_q88, out_y_q88,
+                         exp_x_q88, exp_y_q88, dx, dy);
+            end else begin
+                fail_cnt = fail_cnt + 1;
+                $display("[C%0d] OUT id=%0d | x_out=%0d y_out=%0d | x_q8.8=%0.6f y_q8.8=%0.6f | ref=%0.6f %0.6f | err=%0d/%0d | FAIL",
+                         cyc, id_d8, $signed(x_out), $signed(y_out), out_x_q88, out_y_q88,
+                         exp_x_q88, exp_y_q88, dx, dy);
+            end
         end
     end
 
@@ -143,9 +183,13 @@ module tb_cordic_pipeline;
         n3 = 0;
         in_id = 0;
 
+        repeat (PIPELINE_LAT-1) @(negedge clk);
+
         $display("\nInput samples  seen = %0d", in_cnt);
         $display("Output samples seen = %0d", out_cnt);
-        $display("No pipeline drain wait was applied (as requested).");
+        $display("Pass count          = %0d", pass_cnt);
+        $display("Fail count          = %0d", fail_cnt);
+        $display("Pipeline drain wait was applied.");
 
         $display("================================================================");
         $display("                        END OF SIMULATION");
