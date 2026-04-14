@@ -17,9 +17,9 @@ module fft_twiddle_stage #(
     input  wire signed [BIT_WIDTH-1:0]  iData3_r,
     input  wire signed [BIT_WIDTH-1:0]  iData3_i,
 
-    input  wire [53:0]                  iRom_data_path1,
-    input  wire [53:0]                  iRom_data_path2,
-    input  wire [53:0]                  iRom_data_path3,
+    input  wire [49:0]                  iRom_data_path1,
+    input  wire [49:0]                  iRom_data_path2,
+    input  wire [49:0]                  iRom_data_path3,
 
     output reg                          oData_valid,
     output reg  [SLOT_WIDTH-1:0]        oData_slot,
@@ -36,7 +36,9 @@ module fft_twiddle_stage #(
 
     localparam integer QUAD_WIDTH       = 2;
     localparam integer SIGMA_WIDTH      = 24;
-    localparam integer SCALE_CMD_WIDTH  = 28;
+    localparam integer SCALE_CMD_WIDTH  = 24;
+
+    // Đã thêm 1 stage front-end trong rotator
     localparam integer CORDIC_DEPTH     = 10;
     localparam integer META_DELAY_DEPTH = CORDIC_DEPTH - 1;
     localparam integer META_SLOT_PIPE_W = SLOT_WIDTH * META_DELAY_DEPTH;
@@ -123,10 +125,10 @@ module fft_twiddle_stage #(
     );
 
     fft_cordic_rotator #(
-        .BIT_WIDTH      (BIT_WIDTH),
-        .QUAD_WIDTH     (QUAD_WIDTH),
-        .SIGMA_WIDTH    (SIGMA_WIDTH),
-        .SCALE_CMD_WIDTH(SCALE_CMD_WIDTH)
+        .BIT_WIDTH       (BIT_WIDTH),
+        .QUAD_WIDTH      (QUAD_WIDTH),
+        .SIGMA_WIDTH     (SIGMA_WIDTH),
+        .SCALE_CMD_WIDTH (SCALE_CMD_WIDTH)
     ) path1_rotator (
         .Clk         (Clk),
         .Reset       (Reset),
@@ -140,10 +142,10 @@ module fft_twiddle_stage #(
     );
 
     fft_cordic_rotator #(
-        .BIT_WIDTH      (BIT_WIDTH),
-        .QUAD_WIDTH     (QUAD_WIDTH),
-        .SIGMA_WIDTH    (SIGMA_WIDTH),
-        .SCALE_CMD_WIDTH(SCALE_CMD_WIDTH)
+        .BIT_WIDTH       (BIT_WIDTH),
+        .QUAD_WIDTH      (QUAD_WIDTH),
+        .SIGMA_WIDTH     (SIGMA_WIDTH),
+        .SCALE_CMD_WIDTH (SCALE_CMD_WIDTH)
     ) path2_rotator (
         .Clk         (Clk),
         .Reset       (Reset),
@@ -157,10 +159,10 @@ module fft_twiddle_stage #(
     );
 
     fft_cordic_rotator #(
-        .BIT_WIDTH      (BIT_WIDTH),
-        .QUAD_WIDTH     (QUAD_WIDTH),
-        .SIGMA_WIDTH    (SIGMA_WIDTH),
-        .SCALE_CMD_WIDTH(SCALE_CMD_WIDTH)
+        .BIT_WIDTH       (BIT_WIDTH),
+        .QUAD_WIDTH      (QUAD_WIDTH),
+        .SIGMA_WIDTH     (SIGMA_WIDTH),
+        .SCALE_CMD_WIDTH (SCALE_CMD_WIDTH)
     ) path3_rotator (
         .Clk         (Clk),
         .Reset       (Reset),

@@ -2,344 +2,329 @@ module fft_cordic_rotator #(
     parameter BIT_WIDTH       = 16,
     parameter QUAD_WIDTH      = 2,
     parameter SIGMA_WIDTH     = 24,
-    parameter SCALE_CMD_WIDTH = 28
+    parameter SCALE_CMD_WIDTH = 24,
+    parameter FRAC_BITS       = 8
 )(
-    input  wire                          Clk,
-    input  wire                          Reset,
-    input  wire signed [BIT_WIDTH-1:0]   iData_r,
-    input  wire signed [BIT_WIDTH-1:0]   iData_i,
-    input  wire        [QUAD_WIDTH-1:0]  iQuad,
-    input  wire        [SIGMA_WIDTH-1:0] iSigma,
+    input  wire                             Clk,
+    input  wire                             Reset,
+    input  wire signed [BIT_WIDTH-1:0]      iData_r,
+    input  wire signed [BIT_WIDTH-1:0]      iData_i,
+    input  wire        [QUAD_WIDTH-1:0]     iQuad,
+    input  wire        [SIGMA_WIDTH-1:0]    iSigma,
     input  wire        [SCALE_CMD_WIDTH-1:0] iScale_cmds,
 
-    output reg signed [BIT_WIDTH-1:0]    oData_r,
-    output reg signed [BIT_WIDTH-1:0]    oData_i
+    output reg signed [BIT_WIDTH-1:0]       oData_r,
+    output reg signed [BIT_WIDTH-1:0]       oData_i
 );
 
-    localparam integer NUM_ROT_STAGES    = 6;
-    localparam integer SCALE_FIELD_WIDTH = 7;
-    localparam integer EXT_WIDTH         = BIT_WIDTH + 32;
-    localparam integer PAIR_SUM_WIDTH    = EXT_WIDTH + 1;
-    localparam integer FULL_SUM_WIDTH    = EXT_WIDTH + 2;
-    localparam integer OUTPUT_TRUNC_LSB  = 30;
-    localparam integer OUTPUT_TRUNC_MSB  = OUTPUT_TRUNC_LSB + BIT_WIDTH - 1;
+    localparam integer EXT_WIDTH = BIT_WIDTH + FRAC_BITS;
 
-    reg signed [BIT_WIDTH-1:0] quadrant_rot_r;
-    reg signed [BIT_WIDTH-1:0] quadrant_rot_i;
-
-    reg signed [BIT_WIDTH-1:0] pre_r_reg;
-    reg signed [BIT_WIDTH-1:0] pre_i_reg;
-    reg        [SIGMA_WIDTH-1:0] sigma_pre_reg;
-
-    reg [SIGMA_WIDTH-1:0] sigma_stage1;
-    reg [SIGMA_WIDTH-1:0] sigma_stage2;
-    reg [SIGMA_WIDTH-1:0] sigma_stage3;
-    reg [SIGMA_WIDTH-1:0] sigma_stage4;
-    reg [SIGMA_WIDTH-1:0] sigma_stage5;
-
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d0;
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d1;
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d2;
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d3;
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d4;
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d5;
-    reg [SCALE_CMD_WIDTH-1:0] scale_cmds_d6;
-
-    wire signed [BIT_WIDTH-1:0] stage1_r_comb;
-    wire signed [BIT_WIDTH-1:0] stage1_i_comb;
-    wire signed [BIT_WIDTH-1:0] stage2_r_comb;
-    wire signed [BIT_WIDTH-1:0] stage2_i_comb;
-    wire signed [BIT_WIDTH-1:0] stage3_r_comb;
-    wire signed [BIT_WIDTH-1:0] stage3_i_comb;
-    wire signed [BIT_WIDTH-1:0] stage4_r_comb;
-    wire signed [BIT_WIDTH-1:0] stage4_i_comb;
-    wire signed [BIT_WIDTH-1:0] stage5_r_comb;
-    wire signed [BIT_WIDTH-1:0] stage5_i_comb;
-    wire signed [BIT_WIDTH-1:0] stage6_r_comb;
-    wire signed [BIT_WIDTH-1:0] stage6_i_comb;
-
-    reg signed [BIT_WIDTH-1:0] stage1_r_reg;
-    reg signed [BIT_WIDTH-1:0] stage1_i_reg;
-    reg signed [BIT_WIDTH-1:0] stage2_r_reg;
-    reg signed [BIT_WIDTH-1:0] stage2_i_reg;
-    reg signed [BIT_WIDTH-1:0] stage3_r_reg;
-    reg signed [BIT_WIDTH-1:0] stage3_i_reg;
-    reg signed [BIT_WIDTH-1:0] stage4_r_reg;
-    reg signed [BIT_WIDTH-1:0] stage4_i_reg;
-    reg signed [BIT_WIDTH-1:0] stage5_r_reg;
-    reg signed [BIT_WIDTH-1:0] stage5_i_reg;
-    reg signed [BIT_WIDTH-1:0] stage6_r_reg;
-    reg signed [BIT_WIDTH-1:0] stage6_i_reg;
-
-    wire [SCALE_FIELD_WIDTH-1:0] scale_cmd0;
-    wire [SCALE_FIELD_WIDTH-1:0] scale_cmd1;
-    wire [SCALE_FIELD_WIDTH-1:0] scale_cmd2;
-    wire [SCALE_FIELD_WIDTH-1:0] scale_cmd3;
-
-    wire signed [EXT_WIDTH-1:0] stage6_r_ext;
-    wire signed [EXT_WIDTH-1:0] stage6_i_ext;
-
-    wire signed [EXT_WIDTH-1:0] scale_term_r0;
-    wire signed [EXT_WIDTH-1:0] scale_term_r1;
-    wire signed [EXT_WIDTH-1:0] scale_term_r2;
-    wire signed [EXT_WIDTH-1:0] scale_term_r3;
-    wire signed [EXT_WIDTH-1:0] scale_term_i0;
-    wire signed [EXT_WIDTH-1:0] scale_term_i1;
-    wire signed [EXT_WIDTH-1:0] scale_term_i2;
-    wire signed [EXT_WIDTH-1:0] scale_term_i3;
-
-    reg signed [EXT_WIDTH-1:0] scale_term_r0_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_r1_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_r2_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_r3_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_i0_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_i1_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_i2_reg;
-    reg signed [EXT_WIDTH-1:0] scale_term_i3_reg;
-
-    wire signed [PAIR_SUM_WIDTH-1:0] pair_sum_r01;
-    wire signed [PAIR_SUM_WIDTH-1:0] pair_sum_r23;
-    wire signed [PAIR_SUM_WIDTH-1:0] pair_sum_i01;
-    wire signed [PAIR_SUM_WIDTH-1:0] pair_sum_i23;
-
-    reg signed [PAIR_SUM_WIDTH-1:0] pair_sum_r01_reg;
-    reg signed [PAIR_SUM_WIDTH-1:0] pair_sum_r23_reg;
-    reg signed [PAIR_SUM_WIDTH-1:0] pair_sum_i01_reg;
-    reg signed [PAIR_SUM_WIDTH-1:0] pair_sum_i23_reg;
-
-    wire signed [FULL_SUM_WIDTH-1:0] full_sum_r;
-    wire signed [FULL_SUM_WIDTH-1:0] full_sum_i;
+    // -------------------------------------------------------------------------
+    // Front-end quadrant rotation (combinational)
+    // -------------------------------------------------------------------------
+    reg signed [BIT_WIDTH-1:0] x0c;
+    reg signed [BIT_WIDTH-1:0] y0c;
 
     always @(*) begin
         case (iQuad)
-            2'd0: begin
-                quadrant_rot_r =  iData_r;
-                quadrant_rot_i =  iData_i;
-            end
-            2'd1: begin
-                quadrant_rot_r = -iData_i;
-                quadrant_rot_i =  iData_r;
-            end
-            2'd2: begin
-                quadrant_rot_r = -iData_r;
-                quadrant_rot_i = -iData_i;
-            end
-            2'd3: begin
-                quadrant_rot_r =  iData_i;
-                quadrant_rot_i = -iData_r;
-            end
-            default: begin
-                quadrant_rot_r =  iData_r;
-                quadrant_rot_i =  iData_i;
-            end
+            2'd0: begin x0c =  iData_r; y0c =  iData_i; end
+            2'd1: begin x0c = -iData_i; y0c =  iData_r; end
+            2'd2: begin x0c = -iData_r; y0c = -iData_i; end
+            2'd3: begin x0c =  iData_i; y0c = -iData_r; end
+            default: begin x0c = iData_r; y0c = iData_i; end
         endcase
     end
 
+    // -------------------------------------------------------------------------
+    // NEW: front-end pipeline register
+    // -------------------------------------------------------------------------
+    reg signed [BIT_WIDTH-1:0] x0r;
+    reg signed [BIT_WIDTH-1:0] y0r;
+
+    reg [SIGMA_WIDTH-1:0] sigma_s0;
+    reg [SIGMA_WIDTH-1:0] sigma_s1;
+    reg [SIGMA_WIDTH-1:0] sigma_s2;
+    reg [SIGMA_WIDTH-1:0] sigma_s3;
+    reg [SIGMA_WIDTH-1:0] sigma_s4;
+    reg [SIGMA_WIDTH-1:0] sigma_s5;
+
+    reg [SCALE_CMD_WIDTH-1:0] sc_d0;
+    reg [SCALE_CMD_WIDTH-1:0] sc_d1;
+    reg [SCALE_CMD_WIDTH-1:0] sc_d2;
+    reg [SCALE_CMD_WIDTH-1:0] sc_d3;
+    reg [SCALE_CMD_WIDTH-1:0] sc_d4;
+    reg [SCALE_CMD_WIDTH-1:0] sc_d5;
+    reg [SCALE_CMD_WIDTH-1:0] sc_d6;
+
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
-            pre_r_reg     <= {BIT_WIDTH{1'b0}};
-            pre_i_reg     <= {BIT_WIDTH{1'b0}};
-            sigma_pre_reg <= {SIGMA_WIDTH{1'b0}};
-
-            sigma_stage1 <= {SIGMA_WIDTH{1'b0}};
-            sigma_stage2 <= {SIGMA_WIDTH{1'b0}};
-            sigma_stage3 <= {SIGMA_WIDTH{1'b0}};
-            sigma_stage4 <= {SIGMA_WIDTH{1'b0}};
-            sigma_stage5 <= {SIGMA_WIDTH{1'b0}};
-
-            scale_cmds_d0 <= {SCALE_CMD_WIDTH{1'b0}};
-            scale_cmds_d1 <= {SCALE_CMD_WIDTH{1'b0}};
-            scale_cmds_d2 <= {SCALE_CMD_WIDTH{1'b0}};
-            scale_cmds_d3 <= {SCALE_CMD_WIDTH{1'b0}};
-            scale_cmds_d4 <= {SCALE_CMD_WIDTH{1'b0}};
-            scale_cmds_d5 <= {SCALE_CMD_WIDTH{1'b0}};
-            scale_cmds_d6 <= {SCALE_CMD_WIDTH{1'b0}};
+            x0r      <= {BIT_WIDTH{1'b0}};
+            y0r      <= {BIT_WIDTH{1'b0}};
+            sigma_s0 <= {SIGMA_WIDTH{1'b0}};
+            sigma_s1 <= {SIGMA_WIDTH{1'b0}};
+            sigma_s2 <= {SIGMA_WIDTH{1'b0}};
+            sigma_s3 <= {SIGMA_WIDTH{1'b0}};
+            sigma_s4 <= {SIGMA_WIDTH{1'b0}};
+            sigma_s5 <= {SIGMA_WIDTH{1'b0}};
+            sc_d0    <= {SCALE_CMD_WIDTH{1'b0}};
+            sc_d1    <= {SCALE_CMD_WIDTH{1'b0}};
+            sc_d2    <= {SCALE_CMD_WIDTH{1'b0}};
+            sc_d3    <= {SCALE_CMD_WIDTH{1'b0}};
+            sc_d4    <= {SCALE_CMD_WIDTH{1'b0}};
+            sc_d5    <= {SCALE_CMD_WIDTH{1'b0}};
+            sc_d6    <= {SCALE_CMD_WIDTH{1'b0}};
         end else begin
-            pre_r_reg     <= quadrant_rot_r;
-            pre_i_reg     <= quadrant_rot_i;
-            sigma_pre_reg <= iSigma;
+            x0r      <= x0c;
+            y0r      <= y0c;
+            sigma_s0 <= iSigma;
+            sigma_s1 <= sigma_s0;
+            sigma_s2 <= sigma_s1;
+            sigma_s3 <= sigma_s2;
+            sigma_s4 <= sigma_s3;
+            sigma_s5 <= sigma_s4;
 
-            sigma_stage1 <= sigma_pre_reg;
-            sigma_stage2 <= sigma_stage1;
-            sigma_stage3 <= sigma_stage2;
-            sigma_stage4 <= sigma_stage3;
-            sigma_stage5 <= sigma_stage4;
-
-            scale_cmds_d0 <= iScale_cmds;
-            scale_cmds_d1 <= scale_cmds_d0;
-            scale_cmds_d2 <= scale_cmds_d1;
-            scale_cmds_d3 <= scale_cmds_d2;
-            scale_cmds_d4 <= scale_cmds_d3;
-            scale_cmds_d5 <= scale_cmds_d4;
-            scale_cmds_d6 <= scale_cmds_d5;
+            sc_d0    <= iScale_cmds;
+            sc_d1    <= sc_d0;
+            sc_d2    <= sc_d1;
+            sc_d3    <= sc_d2;
+            sc_d4    <= sc_d3;
+            sc_d5    <= sc_d4;
+            sc_d6    <= sc_d5;
         end
     end
+
+    // -------------------------------------------------------------------------
+    // Micro-rotation stages
+    // -------------------------------------------------------------------------
+    wire signed [BIT_WIDTH-1:0] x1c;
+    wire signed [BIT_WIDTH-1:0] y1c;
+    wire signed [BIT_WIDTH-1:0] x2c;
+    wire signed [BIT_WIDTH-1:0] y2c;
+    wire signed [BIT_WIDTH-1:0] x3c;
+    wire signed [BIT_WIDTH-1:0] y3c;
+    wire signed [BIT_WIDTH-1:0] x4c;
+    wire signed [BIT_WIDTH-1:0] y4c;
+    wire signed [BIT_WIDTH-1:0] x5c;
+    wire signed [BIT_WIDTH-1:0] y5c;
+    wire signed [BIT_WIDTH-1:0] x6c;
+    wire signed [BIT_WIDTH-1:0] y6c;
+
+    reg signed [BIT_WIDTH-1:0] x1r;
+    reg signed [BIT_WIDTH-1:0] y1r;
+    reg signed [BIT_WIDTH-1:0] x2r;
+    reg signed [BIT_WIDTH-1:0] y2r;
+    reg signed [BIT_WIDTH-1:0] x3r;
+    reg signed [BIT_WIDTH-1:0] y3r;
+    reg signed [BIT_WIDTH-1:0] x4r;
+    reg signed [BIT_WIDTH-1:0] y4r;
+    reg signed [BIT_WIDTH-1:0] x5r;
+    reg signed [BIT_WIDTH-1:0] y5r;
+    reg signed [BIT_WIDTH-1:0] x6r;
+    reg signed [BIT_WIDTH-1:0] y6r;
 
     micro_rotation_stage #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(0)
     ) stage0 (
-        .iData_r(pre_r_reg),
-        .iData_i(pre_i_reg),
-        .iSigma (sigma_pre_reg[23:20]),
-        .oData_r(stage1_r_comb),
-        .oData_i(stage1_i_comb)
+        .iData_r(x0r),
+        .iData_i(y0r),
+        .iSigma (sigma_s0[23:20]),
+        .oData_r(x1c),
+        .oData_i(y1c)
     );
 
     micro_rotation_stage #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(3)
     ) stage1 (
-        .iData_r(stage1_r_reg),
-        .iData_i(stage1_i_reg),
-        .iSigma (sigma_stage1[19:16]),
-        .oData_r(stage2_r_comb),
-        .oData_i(stage2_i_comb)
+        .iData_r(x1r),
+        .iData_i(y1r),
+        .iSigma (sigma_s1[19:16]),
+        .oData_r(x2c),
+        .oData_i(y2c)
     );
 
     micro_rotation_stage #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(6)
     ) stage2 (
-        .iData_r(stage2_r_reg),
-        .iData_i(stage2_i_reg),
-        .iSigma (sigma_stage2[15:12]),
-        .oData_r(stage3_r_comb),
-        .oData_i(stage3_i_comb)
+        .iData_r(x2r),
+        .iData_i(y2r),
+        .iSigma (sigma_s2[15:12]),
+        .oData_r(x3c),
+        .oData_i(y3c)
     );
 
     micro_rotation_stage #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(9)
     ) stage3 (
-        .iData_r(stage3_r_reg),
-        .iData_i(stage3_i_reg),
-        .iSigma (sigma_stage3[11:8]),
-        .oData_r(stage4_r_comb),
-        .oData_i(stage4_i_comb)
+        .iData_r(x3r),
+        .iData_i(y3r),
+        .iSigma (sigma_s3[11:8]),
+        .oData_r(x4c),
+        .oData_i(y4c)
     );
 
     micro_rotation_stage #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(12)
     ) stage4 (
-        .iData_r(stage4_r_reg),
-        .iData_i(stage4_i_reg),
-        .iSigma (sigma_stage4[7:4]),
-        .oData_r(stage5_r_comb),
-        .oData_i(stage5_i_comb)
+        .iData_r(x4r),
+        .iData_i(y4r),
+        .iSigma (sigma_s4[7:4]),
+        .oData_r(x5c),
+        .oData_i(y5c)
     );
 
     micro_rotation_stage #(
         .BIT_WIDTH   (BIT_WIDTH),
         .SHIFT_AMOUNT(15)
     ) stage5 (
-        .iData_r(stage5_r_reg),
-        .iData_i(stage5_i_reg),
-        .iSigma (sigma_stage5[3:0]),
-        .oData_r(stage6_r_comb),
-        .oData_i(stage6_i_comb)
+        .iData_r(x5r),
+        .iData_i(y5r),
+        .iSigma (sigma_s5[3:0]),
+        .oData_r(x6c),
+        .oData_i(y6c)
     );
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
-            stage1_r_reg <= {BIT_WIDTH{1'b0}};
-            stage1_i_reg <= {BIT_WIDTH{1'b0}};
-            stage2_r_reg <= {BIT_WIDTH{1'b0}};
-            stage2_i_reg <= {BIT_WIDTH{1'b0}};
-            stage3_r_reg <= {BIT_WIDTH{1'b0}};
-            stage3_i_reg <= {BIT_WIDTH{1'b0}};
-            stage4_r_reg <= {BIT_WIDTH{1'b0}};
-            stage4_i_reg <= {BIT_WIDTH{1'b0}};
-            stage5_r_reg <= {BIT_WIDTH{1'b0}};
-            stage5_i_reg <= {BIT_WIDTH{1'b0}};
-            stage6_r_reg <= {BIT_WIDTH{1'b0}};
-            stage6_i_reg <= {BIT_WIDTH{1'b0}};
+            x1r <= {BIT_WIDTH{1'b0}}; y1r <= {BIT_WIDTH{1'b0}};
+            x2r <= {BIT_WIDTH{1'b0}}; y2r <= {BIT_WIDTH{1'b0}};
+            x3r <= {BIT_WIDTH{1'b0}}; y3r <= {BIT_WIDTH{1'b0}};
+            x4r <= {BIT_WIDTH{1'b0}}; y4r <= {BIT_WIDTH{1'b0}};
+            x5r <= {BIT_WIDTH{1'b0}}; y5r <= {BIT_WIDTH{1'b0}};
+            x6r <= {BIT_WIDTH{1'b0}}; y6r <= {BIT_WIDTH{1'b0}};
         end else begin
-            stage1_r_reg <= stage1_r_comb;
-            stage1_i_reg <= stage1_i_comb;
-            stage2_r_reg <= stage2_r_comb;
-            stage2_i_reg <= stage2_i_comb;
-            stage3_r_reg <= stage3_r_comb;
-            stage3_i_reg <= stage3_i_comb;
-            stage4_r_reg <= stage4_r_comb;
-            stage4_i_reg <= stage4_i_comb;
-            stage5_r_reg <= stage5_r_comb;
-            stage5_i_reg <= stage5_i_comb;
-            stage6_r_reg <= stage6_r_comb;
-            stage6_i_reg <= stage6_i_comb;
+            x1r <= x1c; y1r <= y1c;
+            x2r <= x2c; y2r <= y2c;
+            x3r <= x3c; y3r <= y3c;
+            x4r <= x4c; y4r <= y4c;
+            x5r <= x5c; y5r <= y5c;
+            x6r <= x6c; y6r <= y6c;
         end
     end
 
-    assign scale_cmd0 = scale_cmds_d6[6:0];
-    assign scale_cmd1 = scale_cmds_d6[13:7];
-    assign scale_cmd2 = scale_cmds_d6[20:14];
-    assign scale_cmd3 = scale_cmds_d6[27:21];
+    // -------------------------------------------------------------------------
+    // Scale section
+    // -------------------------------------------------------------------------
+    wire        v0;
+    wire        n0;
+    wire [3:0]  s0;
+    wire        v1;
+    wire        n1;
+    wire [3:0]  s1;
+    wire        v2;
+    wire        n2;
+    wire [3:0]  s2;
+    wire        v3;
+    wire        n3;
+    wire [3:0]  s3;
 
-    assign stage6_r_ext = {{32{stage6_r_reg[BIT_WIDTH-1]}}, stage6_r_reg};
-    assign stage6_i_ext = {{32{stage6_i_reg[BIT_WIDTH-1]}}, stage6_i_reg};
+    assign v0 = sc_d6[5];
+    assign n0 = sc_d6[4];
+    assign s0 = sc_d6[3:0];
+    assign v1 = sc_d6[11];
+    assign n1 = sc_d6[10];
+    assign s1 = sc_d6[9:6];
+    assign v2 = sc_d6[17];
+    assign n2 = sc_d6[16];
+    assign s2 = sc_d6[15:12];
+    assign v3 = sc_d6[23];
+    assign n3 = sc_d6[22];
+    assign s3 = sc_d6[21:18];
 
-    assign scale_term_r0 = scale_cmd0[6] ? (scale_cmd0[5] ? -(stage6_r_ext <<< scale_cmd0[4:0]) : (stage6_r_ext <<< scale_cmd0[4:0])) : {EXT_WIDTH{1'b0}};
-    assign scale_term_r1 = scale_cmd1[6] ? (scale_cmd1[5] ? -(stage6_r_ext <<< scale_cmd1[4:0]) : (stage6_r_ext <<< scale_cmd1[4:0])) : {EXT_WIDTH{1'b0}};
-    assign scale_term_r2 = scale_cmd2[6] ? (scale_cmd2[5] ? -(stage6_r_ext <<< scale_cmd2[4:0]) : (stage6_r_ext <<< scale_cmd2[4:0])) : {EXT_WIDTH{1'b0}};
-    assign scale_term_r3 = scale_cmd3[6] ? (scale_cmd3[5] ? -(stage6_r_ext <<< scale_cmd3[4:0]) : (stage6_r_ext <<< scale_cmd3[4:0])) : {EXT_WIDTH{1'b0}};
+    wire signed [EXT_WIDTH-1:0] x6_e;
+    wire signed [EXT_WIDTH-1:0] y6_e;
 
-    assign scale_term_i0 = scale_cmd0[6] ? (scale_cmd0[5] ? -(stage6_i_ext <<< scale_cmd0[4:0]) : (stage6_i_ext <<< scale_cmd0[4:0])) : {EXT_WIDTH{1'b0}};
-    assign scale_term_i1 = scale_cmd1[6] ? (scale_cmd1[5] ? -(stage6_i_ext <<< scale_cmd1[4:0]) : (stage6_i_ext <<< scale_cmd1[4:0])) : {EXT_WIDTH{1'b0}};
-    assign scale_term_i2 = scale_cmd2[6] ? (scale_cmd2[5] ? -(stage6_i_ext <<< scale_cmd2[4:0]) : (stage6_i_ext <<< scale_cmd2[4:0])) : {EXT_WIDTH{1'b0}};
-    assign scale_term_i3 = scale_cmd3[6] ? (scale_cmd3[5] ? -(stage6_i_ext <<< scale_cmd3[4:0]) : (stage6_i_ext <<< scale_cmd3[4:0])) : {EXT_WIDTH{1'b0}};
+    assign x6_e = {{FRAC_BITS{x6r[BIT_WIDTH-1]}}, x6r};
+    assign y6_e = {{FRAC_BITS{y6r[BIT_WIDTH-1]}}, y6r};
+
+    wire signed [EXT_WIDTH-1:0] tx0;
+    wire signed [EXT_WIDTH-1:0] tx1;
+    wire signed [EXT_WIDTH-1:0] tx2;
+    wire signed [EXT_WIDTH-1:0] tx3;
+    wire signed [EXT_WIDTH-1:0] ty0;
+    wire signed [EXT_WIDTH-1:0] ty1;
+    wire signed [EXT_WIDTH-1:0] ty2;
+    wire signed [EXT_WIDTH-1:0] ty3;
+
+    assign tx0 = v0 ? (n0 ? -(x6_e <<< s0) : (x6_e <<< s0)) : {EXT_WIDTH{1'b0}};
+    assign tx1 = v1 ? (n1 ? -(x6_e <<< s1) : (x6_e <<< s1)) : {EXT_WIDTH{1'b0}};
+    assign tx2 = v2 ? (n2 ? -(x6_e <<< s2) : (x6_e <<< s2)) : {EXT_WIDTH{1'b0}};
+    assign tx3 = v3 ? (n3 ? -(x6_e <<< s3) : (x6_e <<< s3)) : {EXT_WIDTH{1'b0}};
+
+    assign ty0 = v0 ? (n0 ? -(y6_e <<< s0) : (y6_e <<< s0)) : {EXT_WIDTH{1'b0}};
+    assign ty1 = v1 ? (n1 ? -(y6_e <<< s1) : (y6_e <<< s1)) : {EXT_WIDTH{1'b0}};
+    assign ty2 = v2 ? (n2 ? -(y6_e <<< s2) : (y6_e <<< s2)) : {EXT_WIDTH{1'b0}};
+    assign ty3 = v3 ? (n3 ? -(y6_e <<< s3) : (y6_e <<< s3)) : {EXT_WIDTH{1'b0}};
+
+    reg signed [EXT_WIDTH-1:0] tx0r;
+    reg signed [EXT_WIDTH-1:0] tx1r;
+    reg signed [EXT_WIDTH-1:0] tx2r;
+    reg signed [EXT_WIDTH-1:0] tx3r;
+    reg signed [EXT_WIDTH-1:0] ty0r;
+    reg signed [EXT_WIDTH-1:0] ty1r;
+    reg signed [EXT_WIDTH-1:0] ty2r;
+    reg signed [EXT_WIDTH-1:0] ty3r;
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
-            scale_term_r0_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_r1_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_r2_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_r3_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_i0_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_i1_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_i2_reg <= {EXT_WIDTH{1'b0}};
-            scale_term_i3_reg <= {EXT_WIDTH{1'b0}};
+            tx0r <= {EXT_WIDTH{1'b0}}; tx1r <= {EXT_WIDTH{1'b0}};
+            tx2r <= {EXT_WIDTH{1'b0}}; tx3r <= {EXT_WIDTH{1'b0}};
+            ty0r <= {EXT_WIDTH{1'b0}}; ty1r <= {EXT_WIDTH{1'b0}};
+            ty2r <= {EXT_WIDTH{1'b0}}; ty3r <= {EXT_WIDTH{1'b0}};
         end else begin
-            scale_term_r0_reg <= scale_term_r0;
-            scale_term_r1_reg <= scale_term_r1;
-            scale_term_r2_reg <= scale_term_r2;
-            scale_term_r3_reg <= scale_term_r3;
-            scale_term_i0_reg <= scale_term_i0;
-            scale_term_i1_reg <= scale_term_i1;
-            scale_term_i2_reg <= scale_term_i2;
-            scale_term_i3_reg <= scale_term_i3;
+            tx0r <= tx0; tx1r <= tx1;
+            tx2r <= tx2; tx3r <= tx3;
+            ty0r <= ty0; ty1r <= ty1;
+            ty2r <= ty2; ty3r <= ty3;
         end
     end
 
-    assign pair_sum_r01 = scale_term_r0_reg + scale_term_r1_reg;
-    assign pair_sum_r23 = scale_term_r2_reg + scale_term_r3_reg;
-    assign pair_sum_i01 = scale_term_i0_reg + scale_term_i1_reg;
-    assign pair_sum_i23 = scale_term_i2_reg + scale_term_i3_reg;
+    wire signed [EXT_WIDTH:0] px01;
+    wire signed [EXT_WIDTH:0] px23;
+    wire signed [EXT_WIDTH:0] py01;
+    wire signed [EXT_WIDTH:0] py23;
+
+    assign px01 = $signed({tx0r[EXT_WIDTH-1], tx0r}) + $signed({tx1r[EXT_WIDTH-1], tx1r});
+    assign px23 = $signed({tx2r[EXT_WIDTH-1], tx2r}) + $signed({tx3r[EXT_WIDTH-1], tx3r});
+    assign py01 = $signed({ty0r[EXT_WIDTH-1], ty0r}) + $signed({ty1r[EXT_WIDTH-1], ty1r});
+    assign py23 = $signed({ty2r[EXT_WIDTH-1], ty2r}) + $signed({ty3r[EXT_WIDTH-1], ty3r});
+
+    reg signed [EXT_WIDTH:0] px01r;
+    reg signed [EXT_WIDTH:0] px23r;
+    reg signed [EXT_WIDTH:0] py01r;
+    reg signed [EXT_WIDTH:0] py23r;
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
-            pair_sum_r01_reg <= {PAIR_SUM_WIDTH{1'b0}};
-            pair_sum_r23_reg <= {PAIR_SUM_WIDTH{1'b0}};
-            pair_sum_i01_reg <= {PAIR_SUM_WIDTH{1'b0}};
-            pair_sum_i23_reg <= {PAIR_SUM_WIDTH{1'b0}};
+            px01r <= {(EXT_WIDTH+1){1'b0}};
+            px23r <= {(EXT_WIDTH+1){1'b0}};
+            py01r <= {(EXT_WIDTH+1){1'b0}};
+            py23r <= {(EXT_WIDTH+1){1'b0}};
         end else begin
-            pair_sum_r01_reg <= pair_sum_r01;
-            pair_sum_r23_reg <= pair_sum_r23;
-            pair_sum_i01_reg <= pair_sum_i01;
-            pair_sum_i23_reg <= pair_sum_i23;
+            px01r <= px01;
+            px23r <= px23;
+            py01r <= py01;
+            py23r <= py23;
         end
     end
 
-    assign full_sum_r = pair_sum_r01_reg + pair_sum_r23_reg;
-    assign full_sum_i = pair_sum_i01_reg + pair_sum_i23_reg;
+    wire signed [EXT_WIDTH+1:0] full_x;
+    wire signed [EXT_WIDTH+1:0] full_y;
+
+    assign full_x = $signed({px01r[EXT_WIDTH], px01r}) + $signed({px23r[EXT_WIDTH], px23r});
+    assign full_y = $signed({py01r[EXT_WIDTH], py01r}) + $signed({py23r[EXT_WIDTH], py23r});
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
             oData_r <= {BIT_WIDTH{1'b0}};
             oData_i <= {BIT_WIDTH{1'b0}};
         end else begin
-            oData_r <= full_sum_r[OUTPUT_TRUNC_MSB:OUTPUT_TRUNC_LSB];
-            oData_i <= full_sum_i[OUTPUT_TRUNC_MSB:OUTPUT_TRUNC_LSB];
+            oData_r <= full_x[BIT_WIDTH+FRAC_BITS-1:FRAC_BITS];
+            oData_i <= full_y[BIT_WIDTH+FRAC_BITS-1:FRAC_BITS];
         end
     end
 
