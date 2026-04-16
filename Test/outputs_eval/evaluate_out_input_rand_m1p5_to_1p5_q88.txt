@@ -1,0 +1,13 @@
+===== EVALUATION =====
+Reference file: /mnt/d/College/Project/FFT_on_FPGA/Test/outputs_sw/out_input_rand_m1p5_to_1p5_q88_python.txt
+DUT file: /mnt/d/College/Project/FFT_on_FPGA/Test/outputs_hw/out_input_rand_m1p5_to_1p5_q88.txt
+N: 128
+Signal power: 25080.994041
+Noise power: 1.071310
+SNR (dB): 43.694295
+PSNR (dB): 108.071380
+Input full-scale component (Q8.8): 127.996094
+FFT full-scale component: 16383.500000
+FFT full-scale complex power: 536838144.500000
+MSE: 0.008370
+RMSE: 0.091486
