@@ -3,11 +3,11 @@ Reference file: /mnt/d/College/Project/FFT_on_FPGA/Test/outputs_sw/out_input_com
 DUT file: /mnt/d/College/Project/FFT_on_FPGA/Test/outputs_hw/out_input_complex_m0p5_to_0p5_q88.txt
 N: 128
 Signal power: 1908.734387
-Noise power: 0.611585
-SNR (dB): 34.942883
-PSNR (dB): 110.505962
+Noise power: 0.264130
+SNR (dB): 38.589280
+PSNR (dB): 114.152358
 Input full-scale component (Q8.8): 127.996094
 FFT full-scale component: 16383.500000
 FFT full-scale complex power: 536838144.500000
-MSE: 0.004778
-RMSE: 0.069123
+MSE: 0.002064
+RMSE: 0.045426
