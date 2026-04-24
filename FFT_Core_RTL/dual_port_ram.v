@@ -1,4 +1,4 @@
-module dual_port_ram#(
+module dual_port_ram #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 5
 )(
@@ -17,12 +17,9 @@ module dual_port_ram#(
     output reg  [DATA_WIDTH-1:0]   B_rdata
 );
 
-    // (* ramstyle = "M10K" *) reg [DATA_WIDTH-1:0] mem [0:(1<<ADDR_WIDTH)-1];
-    // (* ramstyle = "MLAB" *) reg [DATA_WIDTH-1:0] mem [0:(1<<ADDR_WIDTH)-1];
     reg [DATA_WIDTH-1:0] mem [0:(1<<ADDR_WIDTH)-1];
 
     always @(posedge Clk) begin
-
         if (A_en) begin
             if (A_we) begin
                 mem[A_addr] <= A_wdata;
