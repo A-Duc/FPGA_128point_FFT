@@ -30,7 +30,6 @@ module fft128_avalon_mm_wrapper(
     localparam COMPLETE  = 3'd4;
 
     // Bus control signals
-    wire master_rd_req;
     wire master_wr_req;
 
     // Address decode signals
@@ -46,7 +45,6 @@ module fft128_avalon_mm_wrapper(
     wire feed_last_evt;
     wire first_out_evt;
     wire capture_done_evt;
-    wire out_gap_err_evt;
     wire capturing_w;
 
     // Control signals
@@ -131,7 +129,6 @@ module fft128_avalon_mm_wrapper(
     wire [31:0] o_buffer2_B_wdata;
     wire [31:0] o_buffer3_B_wdata;
 
-    assign master_rd_req = ~Read_n  & ~ChipSelect_n;
     assign master_wr_req = ~Write_n & ~ChipSelect_n;  
 
     assign i_buffer_access = (Address[8:7] == 2'b00);
@@ -145,7 +142,6 @@ module fft128_avalon_mm_wrapper(
     assign first_out_evt    = fft_out_valid & (state_r == WAITING);
     assign capturing_w      = ((state_r == WAITING) | (state_r == CAPTURING)) & fft_out_valid;
     assign capture_done_evt = (state_r == CAPTURING) & fft_out_valid & (capture_cnt_r == 5'd31);
-    assign out_gap_err_evt  = 1'b0;
 
     assign write_allow = (state_r == IDLE) | (state_r == COMPLETE);
 
@@ -174,16 +170,20 @@ module fft128_avalon_mm_wrapper(
         end else begin
             case (state_r)
                 IDLE: begin
+                    stat_reg <= 4'b0000;
+
                     if (start_evt) begin
                         state_r       <= FEEDING;
                         feed_slot_r   <= 5'd0;
                         feed_valid_r  <= 1'b0;
                         capture_cnt_r <= 5'd0;
-                        stat_reg      <= 4'd0;
+                        stat_reg      <= 4'b0001;
                     end
                 end
 
                 FEEDING: begin
+                    stat_reg <= 4'b0001;
+
                     if (!feed_valid_r) begin
                         feed_slot_r  <= 5'd0;
                         feed_valid_r <= 1'b1;
@@ -198,6 +198,8 @@ module fft128_avalon_mm_wrapper(
                 end
 
                 WAITING: begin
+                    stat_reg <= 4'b0001;
+
                     if (first_out_evt) begin
                         state_r       <= CAPTURING;
                         capture_cnt_r <= 5'd1;
@@ -205,22 +207,25 @@ module fft128_avalon_mm_wrapper(
                 end
 
                 CAPTURING: begin
-                    if (out_gap_err_evt) begin
-                        state_r <= COMPLETE;
-                    end else if (capture_done_evt) begin
-                        state_r <= COMPLETE;
+                    stat_reg <= 4'b0001;
+
+                    if (capture_done_evt) begin
+                        state_r  <= COMPLETE;
+                        stat_reg <= 4'b0010;
                     end else if (fft_out_valid) begin
                         capture_cnt_r <= capture_cnt_r + 5'd1;
                     end
                 end
 
                 COMPLETE: begin
+                    stat_reg <= 4'b0010;
+
                     if (clear_evt) begin
                         state_r       <= IDLE;
                         feed_slot_r   <= 5'd0;
                         feed_valid_r  <= 1'b0;
                         capture_cnt_r <= 5'd0;
-                        stat_reg      <= 4'd0;
+                        stat_reg      <= 4'b0000;
                     end
                 end
 
@@ -229,7 +234,7 @@ module fft128_avalon_mm_wrapper(
                     feed_slot_r   <= 5'd0;
                     feed_valid_r  <= 1'b0;
                     capture_cnt_r <= 5'd0;
-                    stat_reg      <= 4'd0;
+                    stat_reg      <= 4'b0000;
                 end
             endcase
         end
