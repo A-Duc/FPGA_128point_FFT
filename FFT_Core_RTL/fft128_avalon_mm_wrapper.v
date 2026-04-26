@@ -240,6 +240,38 @@ module fft128_avalon_mm_wrapper(
         end
     end
 
+    always @(*) begin
+        ReadData = 32'd0;
+
+        if (~ChipSelect_n & ~Read_n) begin
+            if (cfg_regs_access) begin
+                case (Address[1:0])
+                    REG_CTRL_ADDR: ReadData = {28'd0, ctrl_reg};
+                    REG_STAT_ADDR: ReadData = {28'd0, stat_reg};
+                    default:       ReadData = 32'd0;
+                endcase
+            end else if (o_buffer_access) begin
+                case (Address[6:5])
+                    2'b00:   ReadData = o_buffer0_A_rdata;
+                    2'b01:   ReadData = o_buffer1_A_rdata;
+                    2'b10:   ReadData = o_buffer2_A_rdata;
+                    2'b11:   ReadData = o_buffer3_A_rdata;
+                    default: ReadData = 32'd0;
+                endcase
+            end else if (i_buffer_access) begin
+                case (Address[6:5])
+                    2'b00:   ReadData = i_buffer0_A_rdata;
+                    2'b01:   ReadData = i_buffer1_A_rdata;
+                    2'b10:   ReadData = i_buffer2_A_rdata;
+                    2'b11:   ReadData = i_buffer3_A_rdata;
+                    default: ReadData = 32'd0;
+                endcase
+            end else begin
+                ReadData = 32'd0;
+            end
+        end
+    end
+
     // Input buffer control
     assign i_buffer0_A_en = ~ChipSelect_n & i_buffer_access & (Address[6:5] == 2'b00);
     assign i_buffer1_A_en = ~ChipSelect_n & i_buffer_access & (Address[6:5] == 2'b01);
