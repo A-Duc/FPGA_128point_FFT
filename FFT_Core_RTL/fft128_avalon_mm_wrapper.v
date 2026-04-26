@@ -9,6 +9,7 @@ module fft128_avalon_mm_wrapper(
     input  wire        Read_n,
 
     output wire        WaitRequest_n,
+    output wire        IRQ_n,
     output reg  [31:0] ReadData
 );  
     // Registers
@@ -55,6 +56,7 @@ module fft128_avalon_mm_wrapper(
     wire write_allow;
     wire ctrl_wr_en;
     wire irq_en;
+    wire done_w;
 
     // Input buffer signals
     wire i_buffer0_A_en;
@@ -147,6 +149,10 @@ module fft128_avalon_mm_wrapper(
     assign start_evt        = ctrl_reg[0];
     assign clear_evt        = ctrl_reg[1];
     assign irq_en           = ctrl_reg[2];
+    assign done_w           = stat_reg[1];
+
+    assign IRQ_n            = ~(irq_en & done_w);
+
     assign feed_last_evt    = feed_valid_r & (feed_slot_r == 5'd31);
     assign first_out_evt    = fft_out_valid & (state_r == WAITING);
     assign capturing_w      = ((state_r == WAITING) | (state_r == CAPTURING)) & fft_out_valid;
