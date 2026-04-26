@@ -8,6 +8,7 @@ module fft128_avalon_mm_wrapper(
     input  wire        Write_n,
     input  wire        Read_n,
 
+    output wire        WaitRequest_n,
     output reg  [31:0] ReadData
 );  
     // Registers
@@ -17,6 +18,7 @@ module fft128_avalon_mm_wrapper(
     reg  [4:0] feed_slot_r;
     reg        feed_valid_r;
     reg  [4:0] capture_cnt_r;
+    reg        ram_rd_data_ready_r;
 
     // Config address
     localparam REG_CTRL_ADDR = 2'b00;
@@ -30,7 +32,9 @@ module fft128_avalon_mm_wrapper(
     localparam COMPLETE  = 3'd4;
 
     // Bus control signals
+    wire master_rd_req;
     wire master_wr_req;
+    wire ram_rd_req;
 
     // Address decode signals
     wire i_buffer_access;
@@ -129,11 +133,16 @@ module fft128_avalon_mm_wrapper(
     wire [31:0] o_buffer2_B_wdata;
     wire [31:0] o_buffer3_B_wdata;
 
+    assign master_rd_req = ~Read_n  & ~ChipSelect_n;
     assign master_wr_req = ~Write_n & ~ChipSelect_n;  
 
     assign i_buffer_access = (Address[8:7] == 2'b00);
     assign o_buffer_access = (Address[8:7] == 2'b01);
     assign cfg_regs_access = (Address[8:7] == 2'b10);
+
+    assign ram_rd_req = master_rd_req & (i_buffer_access | o_buffer_access);
+
+    assign WaitRequest_n = ~(ram_rd_req & ~ram_rd_data_ready_r);
 
     assign start_evt        = ctrl_reg[0];
     assign clear_evt        = ctrl_reg[1];
@@ -237,6 +246,18 @@ module fft128_avalon_mm_wrapper(
                     stat_reg      <= 4'b0000;
                 end
             endcase
+        end
+    end
+
+    always @(posedge Clk or negedge Reset_n) begin
+        if (!Reset_n) begin
+            ram_rd_data_ready_r <= 1'b0;
+        end else begin
+            if (ram_rd_req & ~ram_rd_data_ready_r) begin
+                ram_rd_data_ready_r <= 1'b1;
+            end else begin
+                ram_rd_data_ready_r <= 1'b0;
+            end
         end
     end
 
