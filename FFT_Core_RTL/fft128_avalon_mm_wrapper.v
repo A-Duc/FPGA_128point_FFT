@@ -419,10 +419,10 @@ module fft128_avalon_mm_wrapper(
 
         .iData0_r(i_buffer0_B_rdata[31:16]),
         .iData0_i(i_buffer0_B_rdata[15:0]),
-        .iData1_r(i_buffer1_B_rdata[31:16]),
-        .iData1_i(i_buffer1_B_rdata[15:0]),
-        .iData2_r(i_buffer2_B_rdata[31:16]),
-        .iData2_i(i_buffer2_B_rdata[15:0]),
+        .iData1_r(i_buffer2_B_rdata[31:16]),
+        .iData1_i(i_buffer2_B_rdata[15:0]),
+        .iData2_r(i_buffer1_B_rdata[31:16]),
+        .iData2_i(i_buffer1_B_rdata[15:0]),
         .iData3_r(i_buffer3_B_rdata[31:16]),
         .iData3_i(i_buffer3_B_rdata[15:0]),
 
