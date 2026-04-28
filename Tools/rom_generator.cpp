@@ -417,9 +417,9 @@ int main() {
 
     auto scale_pool = build_scale_term_pool();
 
-    ofstream rom_out("rom_hwaware.txt");
+    ofstream rom_out("rom_hw.txt");
     if (!rom_out.is_open()) {
-        cerr << "ERROR: cannot open rom_hwaware.txt for writing\n";
+        std::cerr << "ERROR: cannot open rom_hwaware.txt for writing\n";
         return 1;
     }
 
@@ -488,9 +488,9 @@ int main() {
 
     rom_out.close();
 
-    cerr << "ROM data written to rom_hwaware.txt\n";
+    std::cerr << "ROM data written to rom_hw.txt\n";
 
-    cerr << "\n===============================================\n"
+    std::cerr << "\n===============================================\n"
          << "  Accuracy Report (hardware-aware generator)\n"
          << "===============================================\n"
          << "  Sigma brute-force space   = 9^6 exact\n"
