@@ -1,11 +1,11 @@
 
 FFT Error Evaluation
-Input set : alt_A025
+Input set : pg109_twotone_A05
 
 +-----------------------------------+--------------+--------------+-----------+-----------+
 | Comparison                        | MSE          | RMSE         | SNR(dB)   | PSNR(dB)  |
 +-----------------------------------+--------------+--------------+-----------+-----------+
-| Xilinx C model vs Python FFT      |   0.0000e+00 |   0.0000e+00 |       inf |       inf |
-| FFT_Core_RTL vs Python FFT        |   0.0000e+00 |   0.0000e+00 |       inf |       inf |
-| FFT_Core_RTL vs Xilinx C model    |   0.0000e+00 |   0.0000e+00 |       inf |       inf |
+| Xilinx C model vs Python FFT      |   2.3106e-08 |   1.5201e-04 |    91.683 |   110.070 |
+| FFT_Core_RTL vs Python FFT        |   1.0739e-03 |   3.2771e-02 |    45.011 |    63.398 |
+| FFT_Core_RTL vs Xilinx C model    |   1.0748e-03 |   3.2784e-02 |    45.007 |    63.394 |
 +-----------------------------------+--------------+--------------+-----------+-----------+

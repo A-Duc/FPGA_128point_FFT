@@ -1,11 +1,11 @@
 
 FFT Error Evaluation
-Input set : alt_A025
+Input set : random_uniform_A05_seed1
 
 +-----------------------------------+--------------+--------------+-----------+-----------+
 | Comparison                        | MSE          | RMSE         | SNR(dB)   | PSNR(dB)  |
 +-----------------------------------+--------------+--------------+-----------+-----------+
-| Xilinx C model vs Python FFT      |   0.0000e+00 |   0.0000e+00 |       inf |       inf |
-| FFT_Core_RTL vs Python FFT        |   0.0000e+00 |   0.0000e+00 |       inf |       inf |
-| FFT_Core_RTL vs Xilinx C model    |   0.0000e+00 |   0.0000e+00 |       inf |       inf |
+| Xilinx C model vs Python FFT      |   2.2526e-08 |   1.5009e-04 |    89.553 |    96.769 |
+| FFT_Core_RTL vs Python FFT        |   1.1272e-03 |   3.3573e-02 |    42.560 |    49.776 |
+| FFT_Core_RTL vs Xilinx C model    |   1.1291e-03 |   3.3602e-02 |    42.553 |    49.769 |
 +-----------------------------------+--------------+--------------+-----------+-----------+

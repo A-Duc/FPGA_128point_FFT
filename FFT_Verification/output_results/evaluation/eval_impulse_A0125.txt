@@ -1,6 +1,6 @@
 
 FFT Error Evaluation
-Input set : alt_A025
+Input set : impulse_A0125
 
 +-----------------------------------+--------------+--------------+-----------+-----------+
 | Comparison                        | MSE          | RMSE         | SNR(dB)   | PSNR(dB)  |

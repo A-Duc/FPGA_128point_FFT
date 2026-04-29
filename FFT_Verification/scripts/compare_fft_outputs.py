@@ -102,8 +102,6 @@ def compute_metrics(x_test: np.ndarray, x_ref: np.ndarray) -> dict:
         "MSE": mse,
         "RMSE": rmse,
         "SNR": snr_db,
-        "SQNR": snr_db,
-        "SNR/SQNR": snr_db,
         "PSNR": psnr_db,
     }
 
@@ -136,13 +134,13 @@ def make_table(desc: str, rows: list[tuple[str, dict]]) -> str:
     lines.append(f"Input set : {desc}")
     lines.append("")
     lines.append(
-        "+-----------------------------------+--------------+--------------+-----------+-----------+---------------+-----------+"
+        "+-----------------------------------+--------------+--------------+-----------+-----------+"
     )
     lines.append(
-        "| Comparison                        | MSE          | RMSE         | SNR(dB)   | SQNR(dB)  | SNR/SQNR(dB)  | PSNR(dB)  |"
+        "| Comparison                        | MSE          | RMSE         | SNR(dB)   | PSNR(dB)  |"
     )
     lines.append(
-        "+-----------------------------------+--------------+--------------+-----------+-----------+---------------+-----------+"
+        "+-----------------------------------+--------------+--------------+-----------+-----------+"
     )
 
     for name, m in rows:
@@ -151,15 +149,12 @@ def make_table(desc: str, rows: list[tuple[str, dict]]) -> str:
             f"| {fmt_sci(m['MSE']):>12} "
             f"| {fmt_sci(m['RMSE']):>12} "
             f"| {fmt_db(m['SNR']):>9} "
-            f"| {fmt_db(m['SQNR']):>9} "
-            f"| {fmt_db(m['SNR/SQNR']):>13} "
             f"| {fmt_db(m['PSNR']):>9} |"
         )
 
     lines.append(
-        "+-----------------------------------+--------------+--------------+-----------+-----------+---------------+-----------+"
+        "+-----------------------------------+--------------+--------------+-----------+-----------+"
     )
-
 
     return "\n".join(lines)
 
