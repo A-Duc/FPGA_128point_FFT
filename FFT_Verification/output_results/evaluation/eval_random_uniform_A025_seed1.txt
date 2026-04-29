@@ -6,6 +6,6 @@ Input set : random_uniform_A025_seed1
 | Comparison                        | MSE          | RMSE         | SNR(dB)   | PSNR(dB)  |
 +-----------------------------------+--------------+--------------+-----------+-----------+
 | Xilinx C model vs Python FFT      |   1.8187e-08 |   1.3486e-04 |    84.460 |    91.733 |
-| FFT_Core_RTL vs Python FFT        |   3.3855e-04 |   1.8400e-02 |    41.762 |    49.034 |
-| FFT_Core_RTL vs Xilinx C model    |   3.3930e-04 |   1.8420e-02 |    41.752 |    49.024 |
+| FFT_Core_RTL vs Python FFT        |   1.1486e-04 |   1.0717e-02 |    46.456 |    53.729 |
+| FFT_Core_RTL vs Xilinx C model    |   1.1467e-04 |   1.0709e-02 |    46.463 |    53.736 |
 +-----------------------------------+--------------+--------------+-----------+-----------+
