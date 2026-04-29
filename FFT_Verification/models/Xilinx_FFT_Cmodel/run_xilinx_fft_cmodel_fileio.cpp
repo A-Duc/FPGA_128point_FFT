@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         16-bit input
         16-bit phase/twiddle
         pipelined streaming architecture
-        SSR = 4
+        SSR = 1
         unscaled
         truncation
     */
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     const int C_HAS_SCALING     = 0;
     const int C_HAS_BFP         = 0;
     const int C_HAS_ROUNDING    = 0;
-    const int C_NSSR            = 4;
+    const int C_NSSR            = 1;
     const int C_SYSTOLICFFT_INV = 0;
 
     const int samples = 1 << C_NFFT_MAX;
