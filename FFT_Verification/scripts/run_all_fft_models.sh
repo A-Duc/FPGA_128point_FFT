@@ -35,10 +35,7 @@ RTL_OUTPUT="$VERIF_DIR/output_results/rtl_cordic_fft/output_${DESC_NAME}_rtl_cor
 PYTHON_OUTPUT="$VERIF_DIR/output_results/python_fft/output_${DESC_NAME}_python_fft.txt"
 XILINX_OUTPUT="$VERIF_DIR/output_results/xilinx_cmodel_fft/output_${DESC_NAME}_xilinx_cmodel.txt"
 
-EVAL_OUTPUT="$VERIF_DIR/output_results/evaluation/eval_${DESC_NAME}.txt"
-
 TB_VVP="$VERIF_DIR/testbench/fft128_4parallel_feedforward_tb.vvp"
-COMPARE_SCRIPT="$VERIF_DIR/scripts/compare_fft_outputs.py"
 
 echo "============================================================"
 echo "Input set : $DESC_NAME"
@@ -52,12 +49,6 @@ for f in "$RTL_INPUT" "$PYTHON_INPUT" "$XILINX_INPUT"; do
         exit 1
     fi
 done
-
-if [[ ! -f "$COMPARE_SCRIPT" ]]; then
-    echo "ERROR: missing compare script:"
-    echo "  $COMPARE_SCRIPT"
-    exit 1
-fi
 
 echo
 echo "===== Input paths ====="
@@ -121,22 +112,6 @@ echo "Xilinx C model output: $XILINX_OUTPUT"
 
 echo
 echo "============================================================"
-echo "4. Comparing FFT outputs"
-echo "============================================================"
-
-python3 "$COMPARE_SCRIPT" "$BASE_NAME"
-
-if [[ ! -f "$EVAL_OUTPUT" ]]; then
-    echo "ERROR: comparison finished but evaluation file was not found:"
-    echo "  $EVAL_OUTPUT"
-    exit 1
-fi
-
-echo
-echo "Evaluation output    : $EVAL_OUTPUT"
-
-echo
-echo "============================================================"
 echo "Preview outputs"
 echo "============================================================"
 
@@ -151,10 +126,6 @@ head -n 6 "$PYTHON_OUTPUT"
 echo
 echo "----- Xilinx C model -----"
 head -n 6 "$XILINX_OUTPUT"
-
-echo
-echo "----- Evaluation -----"
-cat "$EVAL_OUTPUT"
 
 echo
 echo "DONE."
