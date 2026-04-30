@@ -20,7 +20,7 @@ module fft_cordic_rotator #(
 
     localparam integer CORDIC_WIDTH = BIT_WIDTH + GUARD_BITS;
     localparam integer FINAL_SHIFT  = FRAC_BITS + GUARD_BITS;
-    localparam integer MAX_SHIFT    = 15;
+    localparam integer MAX_SHIFT    = 8;
     localparam integer TERM_WIDTH   = CORDIC_WIDTH + MAX_SHIFT + 3;
     localparam integer PAIR_WIDTH   = TERM_WIDTH + 1;
     localparam integer FULL_WIDTH   = TERM_WIDTH + 2;
