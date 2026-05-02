@@ -1,4 +1,4 @@
-﻿module fft_twiddle_stage #(
+module fft_twiddle_stage #(
     parameter BIT_WIDTH  = 16,
     parameter SLOT_WIDTH = 5
 )(
@@ -17,9 +17,9 @@
     input  wire signed [BIT_WIDTH-1:0]  iData3_r,
     input  wire signed [BIT_WIDTH-1:0]  iData3_i,
 
-    input  wire [49:0]                  iRom_data_path1,
-    input  wire [49:0]                  iRom_data_path2,
-    input  wire [49:0]                  iRom_data_path3,
+    input  wire [29:0]                  iRom_data_path1,
+    input  wire [29:0]                  iRom_data_path2,
+    input  wire [29:0]                  iRom_data_path3,
 
     output reg                          oData_valid,
     output reg  [SLOT_WIDTH-1:0]        oData_slot,
@@ -36,22 +36,24 @@
 
     localparam integer QUAD_WIDTH       = 2;
     localparam integer SIGMA_WIDTH      = 24;
-    localparam integer SCALE_CMD_WIDTH  = 24;
-    localparam integer CORDIC_DEPTH     = 9;
+    localparam integer SCALE_ID_WIDTH   = 4;
+
+    // Đã thêm 1 stage front-end trong rotator
+    localparam integer CORDIC_DEPTH     = 10;
     localparam integer META_DELAY_DEPTH = CORDIC_DEPTH - 1;
     localparam integer META_SLOT_PIPE_W = SLOT_WIDTH * META_DELAY_DEPTH;
 
     wire [QUAD_WIDTH-1:0]      path1_quad;
     wire [SIGMA_WIDTH-1:0]     path1_sigma;
-    wire [SCALE_CMD_WIDTH-1:0] path1_scale_cmds;
+    wire [SCALE_ID_WIDTH-1:0]  path1_scale_id;
 
     wire [QUAD_WIDTH-1:0]      path2_quad;
     wire [SIGMA_WIDTH-1:0]     path2_sigma;
-    wire [SCALE_CMD_WIDTH-1:0] path2_scale_cmds;
+    wire [SCALE_ID_WIDTH-1:0]  path2_scale_id;
 
     wire [QUAD_WIDTH-1:0]      path3_quad;
     wire [SIGMA_WIDTH-1:0]     path3_sigma;
-    wire [SCALE_CMD_WIDTH-1:0] path3_scale_cmds;
+    wire [SCALE_ID_WIDTH-1:0]  path3_scale_id;
 
     wire signed [BIT_WIDTH-1:0] upper_sum_r;
     wire signed [BIT_WIDTH-1:0] upper_sum_i;
@@ -66,9 +68,9 @@
     reg  [META_DELAY_DEPTH-1:0] valid_pipe;
     reg  [META_SLOT_PIPE_W-1:0] slot_pipe;
 
-    assign {path1_quad, path1_sigma, path1_scale_cmds} = iRom_data_path1;
-    assign {path2_quad, path2_sigma, path2_scale_cmds} = iRom_data_path2;
-    assign {path3_quad, path3_sigma, path3_scale_cmds} = iRom_data_path3;
+    assign {path1_quad, path1_sigma, path1_scale_id} = iRom_data_path1;
+    assign {path2_quad, path2_sigma, path2_scale_id} = iRom_data_path2;
+    assign {path3_quad, path3_sigma, path3_scale_id} = iRom_data_path3;
 
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
@@ -123,10 +125,10 @@
     );
 
     fft_cordic_rotator #(
-        .BIT_WIDTH      (BIT_WIDTH),
-        .QUAD_WIDTH     (QUAD_WIDTH),
-        .SIGMA_WIDTH    (SIGMA_WIDTH),
-        .SCALE_CMD_WIDTH(SCALE_CMD_WIDTH)
+        .BIT_WIDTH       (BIT_WIDTH),
+        .QUAD_WIDTH      (QUAD_WIDTH),
+        .SIGMA_WIDTH     (SIGMA_WIDTH),
+        .SCALE_ID_WIDTH  (SCALE_ID_WIDTH)
     ) path1_rotator (
         .Clk         (Clk),
         .Reset       (Reset),
@@ -134,16 +136,16 @@
         .iData_i     (upper_dif_i),
         .iQuad       (path1_quad),
         .iSigma      (path1_sigma),
-        .iScale_cmds (path1_scale_cmds),
+        .iScale_id   (path1_scale_id),
         .oData_r     (oData1_r),
         .oData_i     (oData1_i)
     );
 
     fft_cordic_rotator #(
-        .BIT_WIDTH      (BIT_WIDTH),
-        .QUAD_WIDTH     (QUAD_WIDTH),
-        .SIGMA_WIDTH    (SIGMA_WIDTH),
-        .SCALE_CMD_WIDTH(SCALE_CMD_WIDTH)
+        .BIT_WIDTH       (BIT_WIDTH),
+        .QUAD_WIDTH      (QUAD_WIDTH),
+        .SIGMA_WIDTH     (SIGMA_WIDTH),
+        .SCALE_ID_WIDTH  (SCALE_ID_WIDTH)
     ) path2_rotator (
         .Clk         (Clk),
         .Reset       (Reset),
@@ -151,16 +153,16 @@
         .iData_i     (lower_sum_i),
         .iQuad       (path2_quad),
         .iSigma      (path2_sigma),
-        .iScale_cmds (path2_scale_cmds),
+        .iScale_id   (path2_scale_id),
         .oData_r     (oData2_r),
         .oData_i     (oData2_i)
     );
 
     fft_cordic_rotator #(
-        .BIT_WIDTH      (BIT_WIDTH),
-        .QUAD_WIDTH     (QUAD_WIDTH),
-        .SIGMA_WIDTH    (SIGMA_WIDTH),
-        .SCALE_CMD_WIDTH(SCALE_CMD_WIDTH)
+        .BIT_WIDTH       (BIT_WIDTH),
+        .QUAD_WIDTH      (QUAD_WIDTH),
+        .SIGMA_WIDTH     (SIGMA_WIDTH),
+        .SCALE_ID_WIDTH  (SCALE_ID_WIDTH)
     ) path3_rotator (
         .Clk         (Clk),
         .Reset       (Reset),
@@ -168,7 +170,7 @@
         .iData_i     (lower_dif_i),
         .iQuad       (path3_quad),
         .iSigma      (path3_sigma),
-        .iScale_cmds (path3_scale_cmds),
+        .iScale_id   (path3_scale_id),
         .oData_r     (oData3_r),
         .oData_i     (oData3_i)
     );
