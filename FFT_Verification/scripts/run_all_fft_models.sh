@@ -112,6 +112,26 @@ echo "Xilinx C model output: $XILINX_OUTPUT"
 
 echo
 echo "============================================================"
+echo "4. Comparing FFT outputs"
+echo "============================================================"
+
+python3 "$VERIF_DIR/scripts/compare_fft_outputs.py" \
+    "$DESC_NAME"
+
+EVAL_OUTPUT="$VERIF_DIR/output_results/evaluation/eval_${DESC_NAME}.txt"
+
+if [[ ! -f "$EVAL_OUTPUT" ]]; then
+    echo "ERROR: missing evaluation file:"
+    echo "  $EVAL_OUTPUT"
+    exit 1
+fi
+
+echo
+echo "Evaluation output:"
+echo "  $EVAL_OUTPUT"
+
+echo
+echo "============================================================"
 echo "Preview outputs"
 echo "============================================================"
 

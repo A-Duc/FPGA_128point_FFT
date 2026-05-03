@@ -68,9 +68,9 @@ module fft128_4parallel_feedforward #(
     wire [4:0] s2_out_slot;
     wire       s2_out_valid;
 
-    wire [49:0] data_rom_path1_s2;
-    wire [49:0] data_rom_path2_s2;
-    wire [49:0] data_rom_path3_s2;
+    wire [29:0] data_rom_path1_s2;
+    wire [29:0] data_rom_path2_s2;
+    wire [29:0] data_rom_path3_s2;
 
     fft_s2_rom_path1 s2_rom_p1 (
         .iAddress (s1_out_slot),
@@ -245,9 +245,9 @@ module fft128_4parallel_feedforward #(
     wire [4:0] s4_out_slot;
     wire       s4_out_valid;
 
-    wire [49:0] data_rom_path1_s4;
-    wire [49:0] data_rom_path2_s4;
-    wire [49:0] data_rom_path3_s4;
+    wire [29:0] data_rom_path1_s4;
+    wire [29:0] data_rom_path2_s4;
+    wire [29:0] data_rom_path3_s4;
 
     fft_s4_rom_path1 s4_rom_p1 (
         .iAddress (s4_in_slot[2:0]),
@@ -427,9 +427,9 @@ module fft128_4parallel_feedforward #(
     wire [4:0] s6_out_slot;
     wire       s6_out_valid;
 
-    wire [49:0] data_rom_path1_s6;
-    wire [49:0] data_rom_path2_s6;
-    wire [49:0] data_rom_path3_s6;
+    wire [29:0] data_rom_path1_s6;
+    wire [29:0] data_rom_path2_s6;
+    wire [29:0] data_rom_path3_s6;
 
     fft_s6_rom_path1 s6_rom_p1 (
         .iAddress (s6_in_slot[0]),
