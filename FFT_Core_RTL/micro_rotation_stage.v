@@ -16,11 +16,6 @@ module micro_rotation_stage #(
     assign shifted_r = iData_r >>> SHIFT_AMOUNT;
     assign shifted_i = iData_i >>> SHIFT_AMOUNT;
 
-    // sigma is encoded as signed 4-bit value in range -4..+4.
-    // Old version used 9 explicit cases. This version separates:
-    //   sign  = iSigma < 0
-    //   mag   = abs(iSigma) = 0..4
-    // and handles only 5 magnitude cases.
     wire sigma_neg;
     wire [3:0] sigma_abs;
 

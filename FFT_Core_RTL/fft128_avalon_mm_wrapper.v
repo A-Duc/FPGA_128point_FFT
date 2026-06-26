@@ -1,3 +1,4 @@
+
 module fft128_avalon_mm_wrapper(
     input  wire        Clk,
     input  wire        Reset_n,
@@ -146,17 +147,19 @@ module fft128_avalon_mm_wrapper(
 
     assign WaitRequest_n = ~(ram_rd_req & ~ram_rd_data_ready_r);
 
-    assign start_evt        = ctrl_reg[0];
-    assign clear_evt        = ctrl_reg[1];
+    
     assign irq_en           = ctrl_reg[2];
     assign done_w           = stat_reg[1];
 
     assign IRQ_n            = ~(irq_en & done_w);
 
+    assign start_evt        = ctrl_reg[0];
+    assign clear_evt        = ctrl_reg[1];
     assign feed_last_evt    = feed_valid_r & (feed_slot_r == 5'd31);
     assign first_out_evt    = fft_out_valid & (state_r == WAITING);
-    assign capturing_w      = ((state_r == WAITING) | (state_r == CAPTURING)) & fft_out_valid;
     assign capture_done_evt = (state_r == CAPTURING) & fft_out_valid & (capture_cnt_r == 5'd31);
+
+    assign capturing_w      = ((state_r == WAITING) | (state_r == CAPTURING)) & fft_out_valid;
 
     assign write_allow = (state_r == IDLE) | (state_r == COMPLETE);
 

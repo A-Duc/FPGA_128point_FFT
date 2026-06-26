@@ -21,9 +21,6 @@ module fft_cordic_rotator #(
 
     localparam integer EXT_WIDTH = BIT_WIDTH + FRAC_BITS;
 
-    // -------------------------------------------------------------------------
-    // Front-end quadrant rotation
-    // -------------------------------------------------------------------------
     reg signed [BIT_WIDTH-1:0] x0c;
     reg signed [BIT_WIDTH-1:0] y0c;
 
@@ -52,9 +49,6 @@ module fft_cordic_rotator #(
         endcase
     end
 
-    // -------------------------------------------------------------------------
-    // Front-end pipeline register and ROM command delay pipeline
-    // -------------------------------------------------------------------------
     reg signed [BIT_WIDTH-1:0] x0r;
     reg signed [BIT_WIDTH-1:0] y0r;
 
@@ -114,9 +108,6 @@ module fft_cordic_rotator #(
         end
     end
 
-    // -------------------------------------------------------------------------
-    // Micro-rotation stages
-    // -------------------------------------------------------------------------
     wire signed [BIT_WIDTH-1:0] x1c;
     wire signed [BIT_WIDTH-1:0] y1c;
     wire signed [BIT_WIDTH-1:0] x2c;
@@ -184,23 +175,6 @@ module fft_cordic_rotator #(
             x6r <= x6c; y6r <= y6c;
         end
     end
-
-    // -------------------------------------------------------------------------
-    // Scale section: scale_id decoder
-    // -------------------------------------------------------------------------
-    // scale_id mapping:
-    // 0  -> 24'h000028 : +2^8
-    // 1  -> 24'h0008E6 : +2^6 +2^3
-    // 2  -> 24'h000C68 : +2^8 -2^1
-    // 3  -> 24'h000CE8 : +2^8 -2^3
-    // 4  -> 24'h020CE8 : +2^8 -2^3 +2^0
-    // 5  -> 24'h020D28 : +2^8 -2^4 +2^0
-    // 6  -> 24'h024967 : +2^7 +2^5 +2^4
-    // 7  -> 24'h030D28 : +2^8 -2^4 -2^0
-    // 8  -> 24'h863967 : +2^7 +2^5 +2^3 +2^1
-    // 9  -> 24'hC23966 : +2^6 +2^5 +2^3 -2^0
-    // 10 -> 24'hC32D27 : +2^7 -2^4 -2^2 -2^0
-    // 11 -> 24'hC739A7 : +2^7 +2^6 -2^3 -2^1
 
     wire signed [EXT_WIDTH-1:0] x6_e;
     wire signed [EXT_WIDTH-1:0] y6_e;
@@ -282,9 +256,6 @@ module fft_cordic_rotator #(
         endcase
     end
 
-    // -------------------------------------------------------------------------
-    // Register CSD terms
-    // -------------------------------------------------------------------------
     reg signed [EXT_WIDTH-1:0] tx0r;
     reg signed [EXT_WIDTH-1:0] tx1r;
     reg signed [EXT_WIDTH-1:0] tx2r;
@@ -307,9 +278,6 @@ module fft_cordic_rotator #(
         end
     end
 
-    // -------------------------------------------------------------------------
-    // Adder tree stage 1
-    // -------------------------------------------------------------------------
     wire signed [EXT_WIDTH:0] px01;
     wire signed [EXT_WIDTH:0] px23;
     wire signed [EXT_WIDTH:0] py01;
@@ -334,18 +302,12 @@ module fft_cordic_rotator #(
         end
     end
 
-    // -------------------------------------------------------------------------
-    // Adder tree stage 2
-    // -------------------------------------------------------------------------
     wire signed [EXT_WIDTH+1:0] full_x;
     wire signed [EXT_WIDTH+1:0] full_y;
 
     assign full_x = $signed({px01r[EXT_WIDTH], px01r}) + $signed({px23r[EXT_WIDTH], px23r});
     assign full_y = $signed({py01r[EXT_WIDTH], py01r}) + $signed({py23r[EXT_WIDTH], py23r});
 
-    // -------------------------------------------------------------------------
-    // Output truncation
-    // -------------------------------------------------------------------------
     always @(posedge Clk or posedge Reset) begin
         if (Reset) begin
             oData_r <= {BIT_WIDTH{1'b0}};

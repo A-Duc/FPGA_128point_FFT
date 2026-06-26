@@ -1,11 +1,11 @@
 
 FFT Error Evaluation
-Input set : tone_k7_A025
+Input set : random_uniform_A05_seed1
 
 +-----------------------------------+--------------+--------------+-----------+-----------+
 | Comparison                        | MSE          | RMSE         | SQNR(dB)  | PSNR(dB)  |
 +-----------------------------------+--------------+--------------+-----------+-----------+
-| Xilinx C model vs Python FFT      |   8.4265e-09 |   9.1796e-05 |    89.761 |   110.833 |
-| FFT_Core_RTL vs Python FFT        |   1.0104e-03 |   3.1787e-02 |    38.972 |    60.044 |
-| FFT_Core_RTL vs Xilinx C model    |   1.0097e-03 |   3.1776e-02 |    38.975 |    60.047 |
+| Xilinx C model vs Python FFT      |   2.2526e-08 |   1.5009e-04 |    89.553 |    96.769 |
+| FFT_Core_RTL vs Python FFT        |   2.9440e-03 |   5.4258e-02 |    38.391 |    45.607 |
+| FFT_Core_RTL vs Xilinx C model    |   2.9451e-03 |   5.4269e-02 |    38.389 |    45.605 |
 +-----------------------------------+--------------+--------------+-----------+-----------+

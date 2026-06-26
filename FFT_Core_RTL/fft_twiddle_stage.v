@@ -38,7 +38,7 @@ module fft_twiddle_stage #(
     localparam integer SIGMA_WIDTH      = 24;
     localparam integer SCALE_ID_WIDTH   = 4;
 
-    // Đã thêm 1 stage front-end trong rotator
+
     localparam integer CORDIC_DEPTH     = 10;
     localparam integer META_DELAY_DEPTH = CORDIC_DEPTH - 1;
     localparam integer META_SLOT_PIPE_W = SLOT_WIDTH * META_DELAY_DEPTH;

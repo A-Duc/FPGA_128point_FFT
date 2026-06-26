@@ -87,7 +87,7 @@ def compute_metrics(x_test: np.ndarray, x_ref: np.ndarray) -> dict:
     signal_power = float(np.sum(np.abs(x_ref) ** 2))
     noise_power = float(np.sum(np.abs(err) ** 2))
 
-    snr_db = safe_db_ratio(signal_power, noise_power)
+    sqnr_db = safe_db_ratio(signal_power, noise_power)
 
     peak = float(np.max(np.abs(x_ref)))
 
@@ -101,9 +101,7 @@ def compute_metrics(x_test: np.ndarray, x_ref: np.ndarray) -> dict:
     return {
         "MSE": mse,
         "RMSE": rmse,
-        "SNR": snr_db,
-        "SQNR": snr_db,
-        "SNR/SQNR": snr_db,
+        "SQNR": sqnr_db,
         "PSNR": psnr_db,
     }
 
@@ -136,13 +134,13 @@ def make_table(desc: str, rows: list[tuple[str, dict]]) -> str:
     lines.append(f"Input set : {desc}")
     lines.append("")
     lines.append(
-        "+-----------------------------------+--------------+--------------+-----------+-----------+---------------+-----------+"
+        "+-----------------------------------+--------------+--------------+-----------+-----------+"
     )
     lines.append(
-        "| Comparison                        | MSE          | RMSE         | SNR(dB)   | SQNR(dB)  | SNR/SQNR(dB)  | PSNR(dB)  |"
+        "| Comparison                        | MSE          | RMSE         | SQNR(dB)  | PSNR(dB)  |"
     )
     lines.append(
-        "+-----------------------------------+--------------+--------------+-----------+-----------+---------------+-----------+"
+        "+-----------------------------------+--------------+--------------+-----------+-----------+"
     )
 
     for name, m in rows:
@@ -150,33 +148,19 @@ def make_table(desc: str, rows: list[tuple[str, dict]]) -> str:
             f"| {name:<33} "
             f"| {fmt_sci(m['MSE']):>12} "
             f"| {fmt_sci(m['RMSE']):>12} "
-            f"| {fmt_db(m['SNR']):>9} "
             f"| {fmt_db(m['SQNR']):>9} "
-            f"| {fmt_db(m['SNR/SQNR']):>13} "
             f"| {fmt_db(m['PSNR']):>9} |"
         )
 
     lines.append(
-        "+-----------------------------------+--------------+--------------+-----------+-----------+---------------+-----------+"
+        "+-----------------------------------+--------------+--------------+-----------+-----------+"
     )
-
 
     return "\n".join(lines)
 
 
-def main() -> None:
-    if len(sys.argv) != 2:
-        print("Usage:")
-        print("  ./FFT_Verification/scripts/compare_fft_outputs.py <input_name>")
-        print()
-        print("Examples:")
-        print("  ./FFT_Verification/scripts/compare_fft_outputs.py tone_k7_A025")
-        print("  ./FFT_Verification/scripts/compare_fft_outputs.py input_tone_k7_A025")
-        print("  ./FFT_Verification/scripts/compare_fft_outputs.py input_tone_k7_A025.txt")
-        sys.exit(1)
-
-    verif_dir = find_verification_dir(Path(__file__))
-    desc = normalize_input_name(sys.argv[1])
+def compare_one(verif_dir: Path, raw_name: str) -> Path:
+    desc = normalize_input_name(raw_name)
 
     rtl_path = (
         verif_dir
@@ -222,6 +206,27 @@ def main() -> None:
         f.write("\n")
 
     print(f"Evaluation written to: {eval_path}")
+    return eval_path
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        print("Usage:")
+        print("  ./FFT_Verification/scripts/compare_fft_outputs.py <input_name> [input_name ...]")
+        print()
+        print("Examples:")
+        print("  ./FFT_Verification/scripts/compare_fft_outputs.py tone_k7_A025")
+        print("  ./FFT_Verification/scripts/compare_fft_outputs.py input_tone_k7_A025")
+        print("  ./FFT_Verification/scripts/compare_fft_outputs.py input_tone_k7_A025.txt")
+        print("  ./FFT_Verification/scripts/compare_fft_outputs.py input_gaussian_A025_seed1 input_random_uniform_A05_seed1")
+        sys.exit(1)
+
+    verif_dir = find_verification_dir(Path(__file__))
+
+    for idx, raw_name in enumerate(sys.argv[1:], start=1):
+        if idx > 1:
+            print("\n")
+        compare_one(verif_dir, raw_name)
 
 
 if __name__ == "__main__":
